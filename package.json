@@ -1,8 +1,16 @@
 {
   "name": "readable-hook",
   "author": "tauseefk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React hook for ReadableStream",
+  "keywords": [
+    "react",
+    "hook",
+    "react-hook",
+    "browser",
+    "readablestream",
+    "streaming"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
