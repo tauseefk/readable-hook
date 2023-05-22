@@ -13,8 +13,7 @@
   },
   "main": "dist/index.js",
   "scripts": {
-    "build": "rollup -c",
-    "postinstall": "npm run build"
+    "build": "rollup -c"
   },
   "files": [
     "dist"
