@@ -32,8 +32,8 @@ export const useStreamingQuery = (path: string): [string, () => void] => {
       if (!done) {
         setData(value);
 
-        requestAnimationFrame(() => {
-          syncWithTextStream();
+        requestAnimationFrame(async () => {
+          await syncWithTextStream();
         });
       }
     }
