@@ -17,6 +17,17 @@ PERFORMANCE OF THIS SOFTWARE.
 /* global Reflect, Promise */
 
 
+var __assign = function() {
+    __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+
 function __awaiter(thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -69,13 +80,70 @@ var readableTextStream = function (path, options) { return __awaiter(void 0, voi
     });
 }); };
 /**
- * Fetch data from a streaming endpoint
+ * Fetch state from a streaming endpoint
  * @param path endpoint to fetch the response from
  * @returns {[string, () => void]} returns a tuple of data retrieved from the stream, and a query trigger function
  */
 var useStreamingQuery = function (path) {
     var _a = react.useState(''), data = _a[0], setData = _a[1];
-    var queryStream = react.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
+    var streamQuery = react.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
+        function syncWithTextStream() {
+            return __awaiter(this, void 0, void 0, function () {
+                var _a, value, done;
+                var _this = this;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0: return [4 /*yield*/, reader.read()];
+                        case 1:
+                            _a = _b.sent(), value = _a.value, done = _a.done;
+                            if (!done) {
+                                setData(value);
+                                animationFrameId = requestAnimationFrame(function () { return __awaiter(_this, void 0, void 0, function () {
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0: return [4 /*yield*/, syncWithTextStream()];
+                                            case 1:
+                                                _a.sent();
+                                                return [2 /*return*/];
+                                        }
+                                    });
+                                }); });
+                                return [2 /*return*/];
+                            }
+                            if (animationFrameId)
+                                cancelAnimationFrame(animationFrameId);
+                            return [2 /*return*/];
+                    }
+                });
+            });
+        }
+        var animationFrameId, response, reader;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    animationFrameId = null;
+                    return [4 /*yield*/, readableTextStream(path)];
+                case 1:
+                    response = _a.sent();
+                    if (!response)
+                        return [2 /*return*/];
+                    reader = response.getReader();
+                    syncWithTextStream();
+                    return [2 /*return*/];
+            }
+        });
+    }); }, [path]);
+    return [data, streamQuery];
+};
+/**
+ * Trigger a mutation at a streaming endpoint
+ * @param path to the endpoint endpoint
+ * @param staticParams parameters that can be passed at hook initialization
+ * @returns {[string, (dynamicParams?: Record<string, string>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
+ */
+var useStreamingMutation = function (path, staticParams) {
+    var _a = react.useState(''), data = _a[0], setData = _a[1];
+    var streamMutation = react.useCallback(function (dynamicParams) { return __awaiter(void 0, void 0, void 0, function () {
         function syncWithTextStream() {
             return __awaiter(this, void 0, void 0, function () {
                 var _a, value, done;
@@ -106,19 +174,28 @@ var useStreamingQuery = function (path) {
         var response, reader;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, readableTextStream(path)];
+                case 0: return [4 /*yield*/, readableTextStream(path, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(__assign(__assign({}, staticParams), dynamicParams)),
+                    })];
                 case 1:
                     response = _a.sent();
                     if (!response)
                         return [2 /*return*/];
                     reader = response.getReader();
-                    syncWithTextStream();
+                    return [4 /*yield*/, syncWithTextStream()];
+                case 2:
+                    _a.sent();
                     return [2 /*return*/];
             }
         });
-    }); }, [path]);
-    return [data, queryStream];
+    }); }, [path, staticParams]);
+    return [data, streamMutation];
 };
 
+exports.useStreamingMutation = useStreamingMutation;
 exports.useStreamingQuery = useStreamingQuery;
 //# sourceMappingURL=index.js.map
