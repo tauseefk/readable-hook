@@ -49,7 +49,8 @@ export const useStreamingQuery = (path: string): [string, () => void] => {
   return [data, streamQuery];
 };
 
-const DEFAULT_STREAM_DATA = { value: '', done: false, isStreaming: false };
+const DEFAULT_STREAM_DATA: UseStreamingMutationData = { value: '', done: false, isStreaming: false };
+interface UseStreamingMutationData { value: string, done: boolean, isStreaming: boolean }
 type PrimitiveParam = string | boolean | number;
 
 /**
@@ -57,7 +58,7 @@ type PrimitiveParam = string | boolean | number;
  * @param path streaming endpoint
  * @param staticParams params passed during hook initialization
  * @param delay time interval between each stream read call
- * @returns {[string, (dynamicParams?: Record<string, PrimitiveParam>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
+ * @returns {[UseStreamingMutationData, (dynamicParams?: Record<string, PrimitiveParam>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
  */
 export const useStreamingMutation = (
   path: string,
