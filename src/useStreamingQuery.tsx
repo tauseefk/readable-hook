@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { useThrottledCallback } from './utils/useThrottledCallback';
 
 const readableTextStream = async (
   path: string,
@@ -48,20 +49,48 @@ export const useStreamingQuery = (path: string): [string, () => void] => {
   return [data, streamQuery];
 };
 
+const DEFAULT_STREAM_DATA: UseStreamingMutationData = { value: '', done: false, isStreaming: false };
+interface UseStreamingMutationData { value: string, done: boolean, isStreaming: boolean }
+type PrimitiveParam = string | boolean | number;
+
 /**
  * Trigger a mutation at a streaming endpoint
- * @param path to the endpoint endpoint
- * @param staticParams parameters that can be passed at hook initialization
- * @returns {[string, (dynamicParams?: Record<string, string>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
+ * @param path streaming endpoint
+ * @param staticParams params passed during hook initialization
+ * @param delay time interval between each stream read call
+ * @returns {[UseStreamingMutationData, (dynamicParams?: Record<string, PrimitiveParam>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
  */
 export const useStreamingMutation = (
   path: string,
-  staticParams?: Record<string, string>,
-): [string, (dynamicParams?: Record<string, string>) => void] => {
-  const [data, setData] = useState('');
+  staticParams: Record<string, PrimitiveParam>,
+  delay = 500,
+): [
+    { value: string; done: boolean; isStreaming: boolean },
+    (
+      dynamicParams?: Record<string, PrimitiveParam>,
+      onDone?: (value?: string) => void,
+    ) => Promise<void>,
+  ] => {
+  const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
+  const [{ value, done, isStreaming }, setThrottledData] = useState(
+    frequentlyUpdatedData.current,
+  );
+
+  const throttledUpdateState = useThrottledCallback(
+    () => {
+      setThrottledData({ ...frequentlyUpdatedData.current });
+    },
+    [],
+    delay
+  );
 
   const streamMutation = useCallback(
-    async (dynamicParams?: Record<string, string>) => {
+    async (
+      dynamicParams?: Record<string, PrimitiveParam>,
+      onDone?: (value?: string) => void,
+    ) => {
+      frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
+
       const response = await readableTextStream(path, {
         method: 'POST',
         headers: {
@@ -69,24 +98,35 @@ export const useStreamingMutation = (
         },
         body: JSON.stringify({ ...staticParams, ...dynamicParams }),
       });
-      if (!response) return;
+      if (!response) throw new Error('No response from stream.');
 
       const reader = response.getReader();
+
       async function syncWithTextStream() {
         const { value, done } = await reader.read();
         if (!done) {
-          setData(value);
+          frequentlyUpdatedData.current = { value, done, isStreaming: true };
+          throttledUpdateState();
 
           requestAnimationFrame(async () => {
             await syncWithTextStream();
           });
+          return;
         }
+
+        frequentlyUpdatedData.current = {
+          ...frequentlyUpdatedData.current,
+          done: true,
+          isStreaming: false,
+        };
+        throttledUpdateState();
+        if (onDone) onDone(frequentlyUpdatedData.current.value);
       }
 
       await syncWithTextStream();
     },
-    [path, staticParams],
+    [path, staticParams, throttledUpdateState],
   );
 
-  return [data, streamMutation];
+  return [{ value, done, isStreaming }, streamMutation];
 };

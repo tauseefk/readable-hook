@@ -66,6 +66,59 @@ function __generator(thisArg, body) {
     }
 }
 
+function __spreadArray(to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+}
+
+var useThrottledCallback = function (cb, deps, ms) {
+    if (ms === void 0) { ms = 500; }
+    var timeout = react.useRef();
+    var cachedArgs = react.useRef();
+    react.useEffect(function () {
+        var currentTimeout = timeout.current;
+        return function () {
+            if (currentTimeout) {
+                clearTimeout(currentTimeout);
+                timeout.current = undefined;
+            }
+        };
+    }, []);
+    return react.useMemo(function () {
+        var execCbAndSchedule = function (args) {
+            cachedArgs.current = undefined;
+            cb(args);
+            timeout.current = setTimeout(function () {
+                timeout.current = undefined;
+                if (cachedArgs.current) {
+                    execCbAndSchedule(cachedArgs.current);
+                    cachedArgs.current = undefined;
+                }
+            }, ms);
+        };
+        var throttledCb = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            // execute immediately
+            if (!timeout.current) {
+                execCbAndSchedule(args);
+                return;
+            }
+            // cache arguments to be picked up by the next scheduled execution
+            cachedArgs.current = args;
+        };
+        return throttledCb;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, __spreadArray([cb, ms], deps, true));
+};
+
 var readableTextStream = function (path, options) { return __awaiter(void 0, void 0, void 0, function () {
     var response;
     return __generator(this, function (_a) {
@@ -135,15 +188,22 @@ var useStreamingQuery = function (path) {
     }); }, [path]);
     return [data, streamQuery];
 };
+var DEFAULT_STREAM_DATA = { value: '', done: false, isStreaming: false };
 /**
  * Trigger a mutation at a streaming endpoint
- * @param path to the endpoint endpoint
- * @param staticParams parameters that can be passed at hook initialization
- * @returns {[string, (dynamicParams?: Record<string, string>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
+ * @param path streaming endpoint
+ * @param staticParams params passed during hook initialization
+ * @param delay time interval between each stream read call
+ * @returns {[UseStreamingMutationData, (dynamicParams?: Record<string, PrimitiveParam>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
  */
-var useStreamingMutation = function (path, staticParams) {
-    var _a = react.useState(''), data = _a[0], setData = _a[1];
-    var streamMutation = react.useCallback(function (dynamicParams) { return __awaiter(void 0, void 0, void 0, function () {
+var useStreamingMutation = function (path, staticParams, delay) {
+    if (delay === void 0) { delay = 500; }
+    var frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
+    var _a = react.useState(frequentlyUpdatedData.current), _b = _a[0], value = _b.value, done = _b.done, isStreaming = _b.isStreaming, setThrottledData = _a[1];
+    var throttledUpdateState = useThrottledCallback(function () {
+        setThrottledData(__assign({}, frequentlyUpdatedData.current));
+    }, [], delay);
+    var streamMutation = react.useCallback(function (dynamicParams, onDone) { return __awaiter(void 0, void 0, void 0, function () {
         function syncWithTextStream() {
             return __awaiter(this, void 0, void 0, function () {
                 var _a, value, done;
@@ -154,7 +214,8 @@ var useStreamingMutation = function (path, staticParams) {
                         case 1:
                             _a = _b.sent(), value = _a.value, done = _a.done;
                             if (!done) {
-                                setData(value);
+                                frequentlyUpdatedData.current = { value: value, done: done, isStreaming: true };
+                                throttledUpdateState();
                                 requestAnimationFrame(function () { return __awaiter(_this, void 0, void 0, function () {
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
@@ -165,7 +226,12 @@ var useStreamingMutation = function (path, staticParams) {
                                         }
                                     });
                                 }); });
+                                return [2 /*return*/];
                             }
+                            frequentlyUpdatedData.current = __assign(__assign({}, frequentlyUpdatedData.current), { done: true, isStreaming: false });
+                            throttledUpdateState();
+                            if (onDone)
+                                onDone(frequentlyUpdatedData.current.value);
                             return [2 /*return*/];
                     }
                 });
@@ -174,17 +240,19 @@ var useStreamingMutation = function (path, staticParams) {
         var response, reader;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, readableTextStream(path, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(__assign(__assign({}, staticParams), dynamicParams)),
-                    })];
+                case 0:
+                    frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
+                    return [4 /*yield*/, readableTextStream(path, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(__assign(__assign({}, staticParams), dynamicParams)),
+                        })];
                 case 1:
                     response = _a.sent();
                     if (!response)
-                        return [2 /*return*/];
+                        throw new Error('No response from stream.');
                     reader = response.getReader();
                     return [4 /*yield*/, syncWithTextStream()];
                 case 2:
@@ -192,8 +260,8 @@ var useStreamingMutation = function (path, staticParams) {
                     return [2 /*return*/];
             }
         });
-    }); }, [path, staticParams]);
-    return [data, streamMutation];
+    }); }, [path, staticParams, throttledUpdateState]);
+    return [{ value: value, done: done, isStreaming: isStreaming }, streamMutation];
 };
 
 exports.useStreamingMutation = useStreamingMutation;
