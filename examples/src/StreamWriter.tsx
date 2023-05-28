@@ -1,7 +1,7 @@
 import { FC, memo, useRef, useState } from 'react';
 
 const getCharacter = (idx: number) => {
-  if (idx % 29 === 0) {
+  if (idx % 23 === 0) {
     return '\n';
   }
   if (idx % 2 === 0) {
