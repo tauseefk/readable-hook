@@ -127,14 +127,14 @@ var DEFAULT_STREAM_DATA = {
 
 /**
  * Synchronize React state with a ReadableStream.
- * @param {ReadableStream<String>} stream
+ * @param {ReadableStream<String>} streamProducer
  *  readable stream to synchronize with state
  * @param {number} delay
  *  time interval between each stream read call
  * @returns a tuple of data retrieved from the stream,
  *  and a mutation trigger function
  */
-var useReadableHook = function (streamProducer, delay) {
+var useReadable = function (streamProducer, delay) {
     if (delay === void 0) { delay = 500; }
     var frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
     var _a = react.useState(frequentlyUpdatedData.current), _b = _a[0], value = _b.value, done = _b.done, isStreaming = _b.isStreaming, setThrottledData = _a[1];
@@ -282,7 +282,7 @@ var useStreamingQuery = function (path, delay) {
 };
 var useStreamingQueryV2 = function (path, delay) {
     if (delay === void 0) { delay = 500; }
-    return useReadableHook(function () {
+    return useReadable(function () {
         return readableTextStream(path, {
             method: 'GET',
         });
@@ -368,7 +368,7 @@ var useStreamingMutation = function (path, staticParams, delay) {
 };
 var useStreamingMutationV2 = function (path, staticParams, delay) {
     if (delay === void 0) { delay = 500; }
-    return useReadableHook(function (params) {
+    return useReadable(function (params) {
         return readableTextStream(path, {
             method: 'POST',
             headers: {
@@ -379,7 +379,7 @@ var useStreamingMutationV2 = function (path, staticParams, delay) {
     }, delay);
 };
 
-exports.useReadableHook = useReadableHook;
+exports.useReadable = useReadable;
 exports.useStreamingMutation = useStreamingMutation;
 exports.useStreamingMutationV2 = useStreamingMutationV2;
 exports.useStreamingQuery = useStreamingQuery;
