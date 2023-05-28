@@ -5,5 +5,5 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   root: '/examples',
-  base: '/readable-hook',
+  base: '/readable-hook/',
 });
