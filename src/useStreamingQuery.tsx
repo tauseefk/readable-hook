@@ -1,11 +1,14 @@
 import { useCallback, useRef, useState } from 'react';
 import { useThrottledCallback } from './utils/useThrottledCallback';
+import { DEFAULT_STREAM_DATA, PrimitiveParam } from './constants';
+import { useReadableHook } from './useReadableHook';
 
 const readableTextStream = async (
   path: string,
   options?: {
     method: 'GET' | 'POST';
-    body?: any;
+    mode?: "cors" |"no-cors" | "same-origin";
+    body?: string;
     headers?: Record<string, string>;
   },
 ) => {
@@ -16,42 +19,88 @@ const readableTextStream = async (
 };
 
 /**
- * Fetch state from a streaming endpoint
- * @param path endpoint to fetch the response from
- * @returns {[string, () => void]} returns a tuple of data retrieved from the stream, and a query trigger function
+ * Query a streaming endpoint
+ * @param path streaming endpoint
+ * @param delay time interval between each stream read call
+ * @returns {[UseStreamingQueryData, () => void]} returns a tuple of data retrieved from the stream, and a query function
  */
-export const useStreamingQuery = (path: string): [string, () => void] => {
-  const [data, setData] = useState('');
+export const useStreamingQuery = (
+  path: string,
+  delay = 500,
+): [
+    { value: string; done: boolean; isStreaming: boolean },
+    (
+      onDone?: (value?: string) => void,
+    ) => Promise<void>,
+  ] => {
+  const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
+  const [{ value, done, isStreaming }, setThrottledData] = useState(
+    frequentlyUpdatedData.current,
+  );
 
-  const streamQuery = useCallback(async () => {
-    let animationFrameId: number | null = null;
-    const response = await readableTextStream(path);
-    if (!response) return;
+  const throttledUpdateState = useThrottledCallback(
+    () => {
+      setThrottledData({ ...frequentlyUpdatedData.current });
+    },
+    [],
+    delay
+  );
 
-    const reader = response.getReader();
-    async function syncWithTextStream() {
-      const { value, done } = await reader.read();
-      if (!done) {
-        setData(value);
+  const streamQuery = useCallback(
+    async (
+      onDone?: (value?: string) => void,
+    ) => {
+      frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
-        animationFrameId = requestAnimationFrame(async () => {
-          await syncWithTextStream();
-        });
-        return;
+      const response = await readableTextStream(path, {
+        method: 'GET',
+      });
+      if (!response) throw new Error('No response from stream.');
+
+      const reader = response.getReader();
+
+      async function syncWithTextStream() {
+        const { value, done } = await reader.read();
+        if (!done) {
+          frequentlyUpdatedData.current = { value, done, isStreaming: true };
+          throttledUpdateState();
+
+          requestAnimationFrame(async () => {
+            await syncWithTextStream();
+          });
+          return;
+        }
+
+        frequentlyUpdatedData.current = {
+          ...frequentlyUpdatedData.current,
+          done: true,
+          isStreaming: false,
+        };
+        throttledUpdateState();
+        if (onDone) onDone(frequentlyUpdatedData.current.value);
       }
 
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    }
+      await syncWithTextStream();
+    },
+    [path, throttledUpdateState],
+  );
 
-    syncWithTextStream();
-  }, [path]);
-
-  return [data, streamQuery];
+  return [{ value, done, isStreaming }, streamQuery];
 };
 
-const DEFAULT_STREAM_DATA: UseStreamingMutationData = { value: '', done: false, isStreaming: false };
-interface UseStreamingMutationData { value: string, done: boolean, isStreaming: boolean }
-type PrimitiveParam = string | boolean | number;
+export const useStreamingQueryV2 = (
+  path: string,
+  delay = 500,
+): [
+    { value: string; done: boolean; isStreaming: boolean },
+    (
+      onDone?: (value?: string) => void,
+    ) => Promise<void>,
+  ] => {
+  return useReadableHook(readableTextStream(path, {
+    method: 'GET',
+  }), delay);
+};
 
 /**
  * Trigger a mutation at a streaming endpoint
@@ -62,7 +111,7 @@ type PrimitiveParam = string | boolean | number;
  */
 export const useStreamingMutation = (
   path: string,
-  staticParams: Record<string, PrimitiveParam>,
+  staticParams?: Record<string, PrimitiveParam>,
   delay = 500,
 ): [
     { value: string; done: boolean; isStreaming: boolean },
