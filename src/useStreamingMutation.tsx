@@ -3,7 +3,7 @@ import { useRef, useState, useCallback } from 'react';
 import { PrimitiveParam, DEFAULT_STREAM_DATA } from './constants';
 import { useThrottledCallback } from './utils/useThrottledCallback';
 import { readableTextStream } from './utils/readableTextStream';
-import { useReadableHook } from './useReadableHook';
+import { useReadable } from './useReadable';
 
 /**
  * Trigger a mutation at a streaming endpoint
@@ -20,12 +20,12 @@ export const useStreamingMutation = (
   staticParams?: Record<string, PrimitiveParam>,
   delay = 500,
 ): [
-    { value: string; done: boolean; isStreaming: boolean },
-    (
-      params?: Record<string, PrimitiveParam>,
-      onDone?: (value?: string) => void,
-    ) => Promise<void>,
-  ] => {
+  { value: string; done: boolean; isStreaming: boolean },
+  (
+    params?: Record<string, PrimitiveParam>,
+    onDone?: (value?: string) => void,
+  ) => Promise<void>,
+] => {
   const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
   const [{ value, done, isStreaming }, setThrottledData] = useState(
     frequentlyUpdatedData.current,
@@ -91,13 +91,13 @@ export const useStreamingMutationV2 = (
   staticParams?: Record<string, PrimitiveParam>,
   delay = 500,
 ): [
-    { value: string; done: boolean; isStreaming: boolean },
-    (options?: {
-      params?: Record<string, PrimitiveParam>;
-      onDone?: (value?: string) => void;
-    }) => Promise<void>,
-  ] =>
-  useReadableHook(
+  { value: string; done: boolean; isStreaming: boolean },
+  (options?: {
+    params?: Record<string, PrimitiveParam>;
+    onDone?: (value?: string) => void;
+  }) => Promise<void>,
+] =>
+  useReadable(
     (params?: Record<string, PrimitiveParam>) =>
       readableTextStream(path, {
         method: 'POST',
