@@ -1,4 +1,4 @@
-import { DependencyList, useRef, useEffect, useMemo } from "react";
+import { DependencyList, useRef, useEffect, useMemo } from 'react';
 
 export interface ThrottledFunction<Fn extends (...args: unknown[]) => unknown> {
   (this: ThisParameterType<Fn>, ...args: Parameters<Fn>): void;

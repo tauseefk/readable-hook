@@ -1,3 +1,4 @@
+import { PrimitiveParam } from './constants';
 /**
  * Query a streaming endpoint
  * @param path streaming endpoint
@@ -14,4 +15,7 @@ export declare const useStreamingQueryV2: (path: string, delay?: number) => [{
     value: string;
     done: boolean;
     isStreaming: boolean;
-}, (onDone?: ((value?: string) => void) | undefined) => Promise<void>];
+}, (options?: {
+    params?: Record<string, PrimitiveParam> | undefined;
+    onDone?: ((value?: string) => void) | undefined;
+} | undefined) => Promise<void>];

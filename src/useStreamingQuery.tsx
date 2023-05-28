@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useThrottledCallback } from './utils/useThrottledCallback';
-import { DEFAULT_STREAM_DATA } from './constants';
+import { DEFAULT_STREAM_DATA, PrimitiveParam } from './constants';
 import { useReadableHook } from './useReadableHook';
 import { readableTextStream } from './utils/readableTextStream';
 
@@ -16,9 +16,7 @@ export const useStreamingQuery = (
   delay = 500,
 ): [
     { value: string; done: boolean; isStreaming: boolean },
-    (
-      onDone?: (value?: string) => void,
-    ) => Promise<void>,
+    (onDone?: (value?: string) => void) => Promise<void>,
   ] => {
   const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
   const [{ value, done, isStreaming }, setThrottledData] = useState(
@@ -30,13 +28,11 @@ export const useStreamingQuery = (
       setThrottledData({ ...frequentlyUpdatedData.current });
     },
     [],
-    delay
+    delay,
   );
 
   const streamQuery = useCallback(
-    async (
-      onDone?: (value?: string) => void,
-    ) => {
+    async (onDone?: (value?: string) => void) => {
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
       const response = await readableTextStream(path, {
@@ -80,11 +76,15 @@ export const useStreamingQueryV2 = (
   delay = 500,
 ): [
     { value: string; done: boolean; isStreaming: boolean },
-    (
-      onDone?: (value?: string) => void,
-    ) => Promise<void>,
-  ] => {
-  return useReadableHook(() => readableTextStream(path, {
-    method: 'GET',
-  }), delay);
-};
+    (options?: {
+      params?: Record<string, PrimitiveParam>;
+      onDone?: (value?: string) => void;
+    }) => Promise<void>,
+  ] =>
+  useReadableHook(
+    () =>
+      readableTextStream(path, {
+        method: 'GET',
+      }),
+    delay,
+  );

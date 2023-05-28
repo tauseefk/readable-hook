@@ -13,7 +13,4 @@ module.exports = {
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
-  rules: {
-    'max-len': ["error", { "code": 80 } ],
-  },
 };

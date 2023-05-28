@@ -1,9 +1,9 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback } from 'react';
 
-import { PrimitiveParam, DEFAULT_STREAM_DATA } from "./constants";
-import { useThrottledCallback } from "./utils/useThrottledCallback";
-import { readableTextStream } from "./utils/readableTextStream";
-import { useReadableHook } from "./useReadableHook";
+import { PrimitiveParam, DEFAULT_STREAM_DATA } from './constants';
+import { useThrottledCallback } from './utils/useThrottledCallback';
+import { readableTextStream } from './utils/readableTextStream';
+import { useReadableHook } from './useReadableHook';
 
 /**
  * Trigger a mutation at a streaming endpoint
@@ -12,7 +12,7 @@ import { useReadableHook } from "./useReadableHook";
  * @param delay time interval between each stream read call
  * @returns { [
  *  UseStreamingMutationData,
- *  (dynamicParams?: Record<string, PrimitiveParam>) => void
+ *  (params?: Record<string, PrimitiveParam>) => void
  * ] }
  */
 export const useStreamingMutation = (
@@ -22,7 +22,7 @@ export const useStreamingMutation = (
 ): [
     { value: string; done: boolean; isStreaming: boolean },
     (
-      dynamicParams?: Record<string, PrimitiveParam>,
+      params?: Record<string, PrimitiveParam>,
       onDone?: (value?: string) => void,
     ) => Promise<void>,
   ] => {
@@ -36,12 +36,12 @@ export const useStreamingMutation = (
       setThrottledData({ ...frequentlyUpdatedData.current });
     },
     [],
-    delay
+    delay,
   );
 
   const streamMutation = useCallback(
     async (
-      dynamicParams?: Record<string, PrimitiveParam>,
+      params?: Record<string, PrimitiveParam>,
       onDone?: (value?: string) => void,
     ) => {
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
@@ -51,7 +51,7 @@ export const useStreamingMutation = (
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...staticParams, ...dynamicParams }),
+        body: JSON.stringify({ ...staticParams, ...params }),
       });
       if (!response) throw new Error('No response from stream.');
 
@@ -92,16 +92,22 @@ export const useStreamingMutationV2 = (
   delay = 500,
 ): [
     { value: string; done: boolean; isStreaming: boolean },
-    (
-      dynamicParams?: Record<string, PrimitiveParam>,
-      onDone?: (value?: string) => void,
-    ) => Promise<void>,
-  ] => {
-  return useReadableHook((...dynamicParams) => readableTextStream(path, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ ...staticParams, ...dynamicParams }),
-  }), delay);
-};
+    (options?: {
+      params?: Record<string, PrimitiveParam>;
+      onDone?: (value?: string) => void;
+    }) => Promise<void>,
+  ] =>
+  useReadableHook(
+    (params?: Record<string, PrimitiveParam>) =>
+      readableTextStream(path, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...staticParams,
+          ...params,
+        }),
+      }),
+    delay,
+  );

@@ -1,4 +1,4 @@
-import { DependencyList } from "react";
+import { DependencyList } from 'react';
 export interface ThrottledFunction<Fn extends (...args: unknown[]) => unknown> {
     (this: ThisParameterType<Fn>, ...args: Parameters<Fn>): void;
 }

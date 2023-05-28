@@ -1,6 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 import { useThrottledCallback } from './utils/useThrottledCallback';
-import { DEFAULT_STREAM_DATA, UseReadableHookData } from './constants';
+import {
+  DEFAULT_STREAM_DATA,
+  PrimitiveParam,
+  UseReadableHookData,
+} from './constants';
 
 /**
  * Synchronize React state with a ReadableStream.
@@ -8,17 +12,21 @@ import { DEFAULT_STREAM_DATA, UseReadableHookData } from './constants';
  *  readable stream to synchronize with state
  * @param {number} delay
  *  time interval between each stream read call
- * @returns {[UseReadableHookData, () => void]}
- *  returns a tuple of data retrieved from the stream,
+ * @returns a tuple of data retrieved from the stream,
  *  and a mutation trigger function
  */
 export const useReadableHook = (
-  streamProducer: (...args: unknown[]) => Promise<ReadableStream<string>>,
+  streamProducer: (
+    params?: Record<string, PrimitiveParam>,
+  ) => Promise<ReadableStream<string>>,
   delay = 500,
 ): [
-    UseReadableHookData,
-    (...args: unknown[]) => Promise<void>,
-  ] => {
+  UseReadableHookData,
+  (options?: {
+    params?: Record<string, PrimitiveParam>;
+    onDone?: () => void;
+  }) => Promise<void>,
+] => {
   const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
   const [{ value, done, isStreaming }, setThrottledData] = useState(
     frequentlyUpdatedData.current,
@@ -29,17 +37,17 @@ export const useReadableHook = (
       setThrottledData({ ...frequentlyUpdatedData.current });
     },
     [],
-    delay
+    delay,
   );
 
   const synchronize = useCallback(
-    async (
-      dynamicParams: unknown[],
-      onDone?: (value?: string) => void,
-    ) => {
+    async (options?: {
+      params?: Record<string, PrimitiveParam>;
+      onDone?: (value?: string) => void;
+    }) => {
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
-      const response = await streamProducer(dynamicParams);
+      const response = await streamProducer(options?.params);
       if (!response) throw new Error('No response from stream.');
 
       const reader = response.getReader();
@@ -62,7 +70,7 @@ export const useReadableHook = (
           isStreaming: false,
         };
         throttledUpdateState();
-        if (onDone) onDone(frequentlyUpdatedData.current.value);
+        if (options?.onDone) options.onDone(frequentlyUpdatedData.current.value);
       }
 
       await syncWithStream();

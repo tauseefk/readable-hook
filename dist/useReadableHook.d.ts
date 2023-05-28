@@ -1,12 +1,14 @@
-import { UseReadableHookData } from './constants';
+import { PrimitiveParam, UseReadableHookData } from './constants';
 /**
  * Synchronize React state with a ReadableStream.
  * @param {ReadableStream<String>} stream
  *  readable stream to synchronize with state
  * @param {number} delay
  *  time interval between each stream read call
- * @returns {[UseReadableHookData, () => void]}
- *  returns a tuple of data retrieved from the stream,
+ * @returns a tuple of data retrieved from the stream,
  *  and a mutation trigger function
  */
-export declare const useReadableHook: (streamProducer: (...args: unknown[]) => Promise<ReadableStream<string>>, delay?: number) => [UseReadableHookData, (...args: unknown[]) => Promise<void>];
+export declare const useReadableHook: (streamProducer: (params?: Record<string, PrimitiveParam>) => Promise<ReadableStream<string>>, delay?: number) => [UseReadableHookData, (options?: {
+    params?: Record<string, PrimitiveParam>;
+    onDone?: () => void;
+}) => Promise<void>];

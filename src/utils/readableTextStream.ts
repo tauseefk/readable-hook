@@ -1,14 +1,14 @@
 export const readableTextStream = async (
-    path: string,
-    options?: {
-      method: 'GET' | 'POST';
-      mode?: "cors" | "no-cors" | "same-origin";
-      body?: string;
-      headers?: Record<string, string>;
-    },
-  ) => {
-    const response = await fetch(path, options);
-    if (!response.body) throw new Error('No response body found.');
+  path: string,
+  options?: {
+    method: 'GET' | 'POST';
+    mode?: 'cors' | 'no-cors' | 'same-origin';
+    body?: string;
+    headers?: Record<string, string>;
+  },
+) => {
+  const response = await fetch(path, options);
+  if (!response.body) throw new Error('No response body found.');
 
-    return response.body.pipeThrough(new TextDecoderStream());
-  };
+  return response.body.pipeThrough(new TextDecoderStream());
+};

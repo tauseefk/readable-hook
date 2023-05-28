@@ -122,7 +122,7 @@ var useThrottledCallback = function (cb, deps, ms) {
 var DEFAULT_STREAM_DATA = {
     value: '',
     done: false,
-    isStreaming: false
+    isStreaming: false,
 };
 
 /**
@@ -131,8 +131,7 @@ var DEFAULT_STREAM_DATA = {
  *  readable stream to synchronize with state
  * @param {number} delay
  *  time interval between each stream read call
- * @returns {[UseReadableHookData, () => void]}
- *  returns a tuple of data retrieved from the stream,
+ * @returns a tuple of data retrieved from the stream,
  *  and a mutation trigger function
  */
 var useReadableHook = function (streamProducer, delay) {
@@ -142,7 +141,7 @@ var useReadableHook = function (streamProducer, delay) {
     var throttledUpdateState = useThrottledCallback(function () {
         setThrottledData(__assign({}, frequentlyUpdatedData.current));
     }, [], delay);
-    var synchronize = react.useCallback(function (dynamicParams, onDone) { return __awaiter(void 0, void 0, void 0, function () {
+    var synchronize = react.useCallback(function (options) { return __awaiter(void 0, void 0, void 0, function () {
         function syncWithStream() {
             return __awaiter(this, void 0, void 0, function () {
                 var _a, value, done;
@@ -169,8 +168,8 @@ var useReadableHook = function (streamProducer, delay) {
                             }
                             frequentlyUpdatedData.current = __assign(__assign({}, frequentlyUpdatedData.current), { done: true, isStreaming: false });
                             throttledUpdateState();
-                            if (onDone)
-                                onDone(frequentlyUpdatedData.current.value);
+                            if (options === null || options === void 0 ? void 0 : options.onDone)
+                                options.onDone(frequentlyUpdatedData.current.value);
                             return [2 /*return*/];
                     }
                 });
@@ -181,7 +180,7 @@ var useReadableHook = function (streamProducer, delay) {
             switch (_a.label) {
                 case 0:
                     frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
-                    return [4 /*yield*/, streamProducer(dynamicParams)];
+                    return [4 /*yield*/, streamProducer(options === null || options === void 0 ? void 0 : options.params)];
                 case 1:
                     response = _a.sent();
                     if (!response)
@@ -283,9 +282,11 @@ var useStreamingQuery = function (path, delay) {
 };
 var useStreamingQueryV2 = function (path, delay) {
     if (delay === void 0) { delay = 500; }
-    return useReadableHook(function () { return readableTextStream(path, {
-        method: 'GET',
-    }); }, delay);
+    return useReadableHook(function () {
+        return readableTextStream(path, {
+            method: 'GET',
+        });
+    }, delay);
 };
 
 /**
@@ -295,7 +296,7 @@ var useStreamingQueryV2 = function (path, delay) {
  * @param delay time interval between each stream read call
  * @returns { [
  *  UseStreamingMutationData,
- *  (dynamicParams?: Record<string, PrimitiveParam>) => void
+ *  (params?: Record<string, PrimitiveParam>) => void
  * ] }
  */
 var useStreamingMutation = function (path, staticParams, delay) {
@@ -305,7 +306,7 @@ var useStreamingMutation = function (path, staticParams, delay) {
     var throttledUpdateState = useThrottledCallback(function () {
         setThrottledData(__assign({}, frequentlyUpdatedData.current));
     }, [], delay);
-    var streamMutation = react.useCallback(function (dynamicParams, onDone) { return __awaiter(void 0, void 0, void 0, function () {
+    var streamMutation = react.useCallback(function (params, onDone) { return __awaiter(void 0, void 0, void 0, function () {
         function syncWithTextStream() {
             return __awaiter(this, void 0, void 0, function () {
                 var _a, value, done;
@@ -349,7 +350,7 @@ var useStreamingMutation = function (path, staticParams, delay) {
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify(__assign(__assign({}, staticParams), dynamicParams)),
+                            body: JSON.stringify(__assign(__assign({}, staticParams), params)),
                         })];
                 case 1:
                     response = _a.sent();
@@ -367,17 +368,13 @@ var useStreamingMutation = function (path, staticParams, delay) {
 };
 var useStreamingMutationV2 = function (path, staticParams, delay) {
     if (delay === void 0) { delay = 500; }
-    return useReadableHook(function () {
-        var dynamicParams = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            dynamicParams[_i] = arguments[_i];
-        }
+    return useReadableHook(function (params) {
         return readableTextStream(path, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(__assign(__assign({}, staticParams), dynamicParams)),
+            body: JSON.stringify(__assign(__assign({}, staticParams), params)),
         });
     }, delay);
 };
