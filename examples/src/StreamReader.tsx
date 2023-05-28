@@ -1,11 +1,11 @@
 import { FC } from 'react'
 import { useReadableHook } from '../../src/useReadableHook';
 
-export const StreamReader: FC<{ readableStream: ReadableStream }> = ({
+export const StreamReader: FC<{ readableStream: ReadableStream<string> }> = ({
   readableStream,
 }) => {
   const [{ value }, synchronize] = useReadableHook(
-    Promise.resolve(readableStream),
+    async () => readableStream,
     100,
   );
 

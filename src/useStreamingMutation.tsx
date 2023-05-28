@@ -3,6 +3,7 @@ import { useRef, useState, useCallback } from "react";
 import { PrimitiveParam, DEFAULT_STREAM_DATA } from "./constants";
 import { useThrottledCallback } from "./utils/useThrottledCallback";
 import { readableTextStream } from "./utils/readableTextStream";
+import { useReadableHook } from "./useReadableHook";
 
 /**
  * Trigger a mutation at a streaming endpoint
@@ -83,4 +84,24 @@ export const useStreamingMutation = (
   );
 
   return [{ value, done, isStreaming }, streamMutation];
+};
+
+export const useStreamingMutationV2 = (
+  path: string,
+  staticParams?: Record<string, PrimitiveParam>,
+  delay = 500,
+): [
+    { value: string; done: boolean; isStreaming: boolean },
+    (
+      dynamicParams?: Record<string, PrimitiveParam>,
+      onDone?: (value?: string) => void,
+    ) => Promise<void>,
+  ] => {
+  return useReadableHook((...dynamicParams) => readableTextStream(path, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ...staticParams, ...dynamicParams }),
+  }), delay);
 };

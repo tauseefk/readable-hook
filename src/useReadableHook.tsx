@@ -13,13 +13,11 @@ import { DEFAULT_STREAM_DATA, UseReadableHookData } from './constants';
  *  and a mutation trigger function
  */
 export const useReadableHook = (
-  stream: Promise<ReadableStream<string>>,
+  streamProducer: (...args: unknown[]) => Promise<ReadableStream<string>>,
   delay = 500,
 ): [
     UseReadableHookData,
-    (
-      onDone?: (value?: string) => void,
-    ) => Promise<void>,
+    (...args: unknown[]) => Promise<void>,
   ] => {
   const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
   const [{ value, done, isStreaming }, setThrottledData] = useState(
@@ -36,11 +34,12 @@ export const useReadableHook = (
 
   const synchronize = useCallback(
     async (
+      dynamicParams: unknown[],
       onDone?: (value?: string) => void,
     ) => {
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
-      const response = await stream;
+      const response = await streamProducer(dynamicParams);
       if (!response) throw new Error('No response from stream.');
 
       const reader = response.getReader();
@@ -68,7 +67,7 @@ export const useReadableHook = (
 
       await syncWithStream();
     },
-    [stream, throttledUpdateState],
+    [streamProducer, throttledUpdateState],
   );
 
   return [{ value, done, isStreaming }, synchronize];

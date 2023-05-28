@@ -17,6 +17,9 @@ export const App = () => {
 
   return (<div className='flex flex-col container gap'>
     <StreamWriter writableStream={transformStream.current.writable} />
-    <StreamReader readableStream={transformStream.current.readable.pipeThrough(new TextDecoderStream())} />
+    <StreamReader
+      readableStream={
+        transformStream.current.readable.pipeThrough(new TextDecoderStream())}
+    />
   </div>)
 }

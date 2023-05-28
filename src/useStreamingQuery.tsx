@@ -84,7 +84,7 @@ export const useStreamingQueryV2 = (
       onDone?: (value?: string) => void,
     ) => Promise<void>,
   ] => {
-  return useReadableHook(readableTextStream(path, {
+  return useReadableHook(() => readableTextStream(path, {
     method: 'GET',
   }), delay);
 };
