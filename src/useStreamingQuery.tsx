@@ -5,13 +5,14 @@ import { useReadable } from './useReadable';
 import { readableTextStream } from './utils/readableTextStream';
 
 /**
+ * **DEPRECATED**
  * Query a streaming endpoint
  * @param path streaming endpoint
  * @param delay time interval between each stream read call
  * @returns {[UseStreamingQueryData, () => void]}
  * returns a tuple of data retrieved from the stream, and a query function
  */
-export const useStreamingQuery = (
+export const __useStreamingQuery = (
   path: string,
   delay = 500,
 ): [
@@ -71,7 +72,7 @@ export const useStreamingQuery = (
   return [{ value, done, isStreaming }, streamQuery];
 };
 
-export const useStreamingQueryV2 = (
+export const useStreamingQuery = (
   path: string,
   delay = 500,
 ): [

@@ -211,13 +211,14 @@ var readableTextStream = function (path, options) { return __awaiter(void 0, voi
 }); };
 
 /**
+ * **DEPRECATED**
  * Query a streaming endpoint
  * @param path streaming endpoint
  * @param delay time interval between each stream read call
  * @returns {[UseStreamingQueryData, () => void]}
  * returns a tuple of data retrieved from the stream, and a query function
  */
-var useStreamingQuery = function (path, delay) {
+var __useStreamingQuery = function (path, delay) {
     if (delay === void 0) { delay = 500; }
     var frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
     var _a = react.useState(frequentlyUpdatedData.current), _b = _a[0], value = _b.value, done = _b.done, isStreaming = _b.isStreaming, setThrottledData = _a[1];
@@ -280,7 +281,7 @@ var useStreamingQuery = function (path, delay) {
     }); }, [path, throttledUpdateState]);
     return [{ value: value, done: done, isStreaming: isStreaming }, streamQuery];
 };
-var useStreamingQueryV2 = function (path, delay) {
+var useStreamingQuery = function (path, delay) {
     if (delay === void 0) { delay = 500; }
     return useReadable(function () {
         return readableTextStream(path, {
@@ -290,6 +291,7 @@ var useStreamingQueryV2 = function (path, delay) {
 };
 
 /**
+ * **DEPRECATED**
  * Trigger a mutation at a streaming endpoint
  * @param path streaming endpoint
  * @param staticParams params passed during hook initialization
@@ -299,7 +301,7 @@ var useStreamingQueryV2 = function (path, delay) {
  *  (params?: Record<string, PrimitiveParam>) => void
  * ] }
  */
-var useStreamingMutation = function (path, staticParams, delay) {
+var __useStreamingMutation = function (path, staticParams, delay) {
     if (delay === void 0) { delay = 500; }
     var frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
     var _a = react.useState(frequentlyUpdatedData.current), _b = _a[0], value = _b.value, done = _b.done, isStreaming = _b.isStreaming, setThrottledData = _a[1];
@@ -366,7 +368,7 @@ var useStreamingMutation = function (path, staticParams, delay) {
     }); }, [path, staticParams, throttledUpdateState]);
     return [{ value: value, done: done, isStreaming: isStreaming }, streamMutation];
 };
-var useStreamingMutationV2 = function (path, staticParams, delay) {
+var useStreamingMutation = function (path, staticParams, delay) {
     if (delay === void 0) { delay = 500; }
     return useReadable(function (params) {
         return readableTextStream(path, {
@@ -379,9 +381,9 @@ var useStreamingMutationV2 = function (path, staticParams, delay) {
     }, delay);
 };
 
+exports.__useStreamingMutation = __useStreamingMutation;
+exports.__useStreamingQuery = __useStreamingQuery;
 exports.useReadable = useReadable;
 exports.useStreamingMutation = useStreamingMutation;
-exports.useStreamingMutationV2 = useStreamingMutationV2;
 exports.useStreamingQuery = useStreamingQuery;
-exports.useStreamingQueryV2 = useStreamingQueryV2;
 //# sourceMappingURL=index.js.map
