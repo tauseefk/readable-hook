@@ -6,6 +6,7 @@ import { readableTextStream } from './utils/readableTextStream';
 import { useReadable } from './useReadable';
 
 /**
+ * **DEPRECATED**
  * Trigger a mutation at a streaming endpoint
  * @param path streaming endpoint
  * @param staticParams params passed during hook initialization
@@ -15,7 +16,7 @@ import { useReadable } from './useReadable';
  *  (params?: Record<string, PrimitiveParam>) => void
  * ] }
  */
-export const useStreamingMutation = (
+export const __useStreamingMutation = (
   path: string,
   staticParams?: Record<string, PrimitiveParam>,
   delay = 500,
@@ -86,7 +87,7 @@ export const useStreamingMutation = (
   return [{ value, done, isStreaming }, streamMutation];
 };
 
-export const useStreamingMutationV2 = (
+export const useStreamingMutation = (
   path: string,
   staticParams?: Record<string, PrimitiveParam>,
   delay = 500,
