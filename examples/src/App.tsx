@@ -16,13 +16,15 @@ export const App = () => {
   );
 
   return (
-    <div className="flex flex-col container gap">
-      <StreamWriter writableStream={transformStream.current.writable} />{' '}
-      <StreamReader
-        readableStream={transformStream.current.readable.pipeThrough(
-          new TextDecoderStream(),
-        )}
-      />
+    <div className="wrapper">
+      <div className="container grid grid-gap-2">
+        <StreamReader
+          readableStream={transformStream.current.readable.pipeThrough(
+            new TextDecoderStream(),
+          )}
+        />
+        <StreamWriter writableStream={transformStream.current.writable} />{' '}
+      </div>
     </div>
   );
 };
