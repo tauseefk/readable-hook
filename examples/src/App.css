@@ -1,0 +1,80 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+.border {
+  border: 1px solid;
+}
+
+.border-thick {
+  border: 2px solid;
+}
+
+.container {
+  padding: 16px;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.gap {
+  column-gap: 8px;
+  row-gap: 8px;
+}
+
+.justify-around {
+  justify-content: space-around;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.pointer:hover {
+  color: black;
+  background-color: white;
+}
+
+.m-auto-0 {
+  margin: auto 0;
+}
+
+.stream-output {
+  min-width: 400px;
+  max-width: 100vh;
+  min-height: 400px;
+  max-height: 50svh;
+  overflow-y: scroll;
+}
+
+.scroll-to-bottom {
+  scroll-padding-bottom: 0;
+}
+
+#scroller * {
+  overflow-anchor: none;
+}
+
+#anchor {
+  overflow-anchor: auto;
+  height: 1px;
+}

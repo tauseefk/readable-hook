@@ -1,75 +1,22 @@
 import { useCallback, useRef, useState } from 'react';
 import { useThrottledCallback } from './utils/useThrottledCallback';
-
-const readableTextStream = async (
-  path: string,
-  options?: {
-    method: 'GET' | 'POST';
-    body?: any;
-    headers?: Record<string, string>;
-  },
-) => {
-  const response = await fetch(path, options);
-  if (!response.body) throw new Error('No response body found.');
-
-  return response.body.pipeThrough(new TextDecoderStream());
-};
+import { DEFAULT_STREAM_DATA, PrimitiveParam } from './constants';
+import { useReadableHook } from './useReadableHook';
+import { readableTextStream } from './utils/readableTextStream';
 
 /**
- * Fetch state from a streaming endpoint
- * @param path endpoint to fetch the response from
- * @returns {[string, () => void]} returns a tuple of data retrieved from the stream, and a query trigger function
- */
-export const useStreamingQuery = (path: string): [string, () => void] => {
-  const [data, setData] = useState('');
-
-  const streamQuery = useCallback(async () => {
-    let animationFrameId: number | null = null;
-    const response = await readableTextStream(path);
-    if (!response) return;
-
-    const reader = response.getReader();
-    async function syncWithTextStream() {
-      const { value, done } = await reader.read();
-      if (!done) {
-        setData(value);
-
-        animationFrameId = requestAnimationFrame(async () => {
-          await syncWithTextStream();
-        });
-        return;
-      }
-
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    }
-
-    syncWithTextStream();
-  }, [path]);
-
-  return [data, streamQuery];
-};
-
-const DEFAULT_STREAM_DATA: UseStreamingMutationData = { value: '', done: false, isStreaming: false };
-interface UseStreamingMutationData { value: string, done: boolean, isStreaming: boolean }
-type PrimitiveParam = string | boolean | number;
-
-/**
- * Trigger a mutation at a streaming endpoint
+ * Query a streaming endpoint
  * @param path streaming endpoint
- * @param staticParams params passed during hook initialization
  * @param delay time interval between each stream read call
- * @returns {[UseStreamingMutationData, (dynamicParams?: Record<string, PrimitiveParam>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
+ * @returns {[UseStreamingQueryData, () => void]}
+ * returns a tuple of data retrieved from the stream, and a query function
  */
-export const useStreamingMutation = (
+export const useStreamingQuery = (
   path: string,
-  staticParams: Record<string, PrimitiveParam>,
   delay = 500,
 ): [
     { value: string; done: boolean; isStreaming: boolean },
-    (
-      dynamicParams?: Record<string, PrimitiveParam>,
-      onDone?: (value?: string) => void,
-    ) => Promise<void>,
+    (onDone?: (value?: string) => void) => Promise<void>,
   ] => {
   const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
   const [{ value, done, isStreaming }, setThrottledData] = useState(
@@ -81,22 +28,15 @@ export const useStreamingMutation = (
       setThrottledData({ ...frequentlyUpdatedData.current });
     },
     [],
-    delay
+    delay,
   );
 
-  const streamMutation = useCallback(
-    async (
-      dynamicParams?: Record<string, PrimitiveParam>,
-      onDone?: (value?: string) => void,
-    ) => {
+  const streamQuery = useCallback(
+    async (onDone?: (value?: string) => void) => {
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
       const response = await readableTextStream(path, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ...staticParams, ...dynamicParams }),
+        method: 'GET',
       });
       if (!response) throw new Error('No response from stream.');
 
@@ -125,8 +65,26 @@ export const useStreamingMutation = (
 
       await syncWithTextStream();
     },
-    [path, staticParams, throttledUpdateState],
+    [path, throttledUpdateState],
   );
 
-  return [{ value, done, isStreaming }, streamMutation];
+  return [{ value, done, isStreaming }, streamQuery];
 };
+
+export const useStreamingQueryV2 = (
+  path: string,
+  delay = 500,
+): [
+    { value: string; done: boolean; isStreaming: boolean },
+    (options?: {
+      params?: Record<string, PrimitiveParam>;
+      onDone?: (value?: string) => void;
+    }) => Promise<void>,
+  ] =>
+  useReadableHook(
+    () =>
+      readableTextStream(path, {
+        method: 'GET',
+      }),
+    delay,
+  );
