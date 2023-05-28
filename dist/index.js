@@ -135,14 +135,14 @@ var DEFAULT_STREAM_DATA = {
  *  returns a tuple of data retrieved from the stream,
  *  and a mutation trigger function
  */
-var useReadableHook = function (stream, delay) {
+var useReadableHook = function (streamProducer, delay) {
     if (delay === void 0) { delay = 500; }
     var frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
     var _a = react.useState(frequentlyUpdatedData.current), _b = _a[0], value = _b.value, done = _b.done, isStreaming = _b.isStreaming, setThrottledData = _a[1];
     var throttledUpdateState = useThrottledCallback(function () {
         setThrottledData(__assign({}, frequentlyUpdatedData.current));
     }, [], delay);
-    var synchronize = react.useCallback(function (onDone) { return __awaiter(void 0, void 0, void 0, function () {
+    var synchronize = react.useCallback(function (dynamicParams, onDone) { return __awaiter(void 0, void 0, void 0, function () {
         function syncWithStream() {
             return __awaiter(this, void 0, void 0, function () {
                 var _a, value, done;
@@ -181,7 +181,7 @@ var useReadableHook = function (stream, delay) {
             switch (_a.label) {
                 case 0:
                     frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
-                    return [4 /*yield*/, stream];
+                    return [4 /*yield*/, streamProducer(dynamicParams)];
                 case 1:
                     response = _a.sent();
                     if (!response)
@@ -193,7 +193,7 @@ var useReadableHook = function (stream, delay) {
                     return [2 /*return*/];
             }
         });
-    }); }, [stream, throttledUpdateState]);
+    }); }, [streamProducer, throttledUpdateState]);
     return [{ value: value, done: done, isStreaming: isStreaming }, synchronize];
 };
 
@@ -283,9 +283,9 @@ var useStreamingQuery = function (path, delay) {
 };
 var useStreamingQueryV2 = function (path, delay) {
     if (delay === void 0) { delay = 500; }
-    return useReadableHook(readableTextStream(path, {
+    return useReadableHook(function () { return readableTextStream(path, {
         method: 'GET',
-    }), delay);
+    }); }, delay);
 };
 
 /**
@@ -365,9 +365,26 @@ var useStreamingMutation = function (path, staticParams, delay) {
     }); }, [path, staticParams, throttledUpdateState]);
     return [{ value: value, done: done, isStreaming: isStreaming }, streamMutation];
 };
+var useStreamingMutationV2 = function (path, staticParams, delay) {
+    if (delay === void 0) { delay = 500; }
+    return useReadableHook(function () {
+        var dynamicParams = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            dynamicParams[_i] = arguments[_i];
+        }
+        return readableTextStream(path, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(__assign(__assign({}, staticParams), dynamicParams)),
+        });
+    }, delay);
+};
 
 exports.useReadableHook = useReadableHook;
 exports.useStreamingMutation = useStreamingMutation;
+exports.useStreamingMutationV2 = useStreamingMutationV2;
 exports.useStreamingQuery = useStreamingQuery;
 exports.useStreamingQueryV2 = useStreamingQueryV2;
 //# sourceMappingURL=index.js.map

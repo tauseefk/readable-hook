@@ -9,4 +9,4 @@ import { UseReadableHookData } from './constants';
  *  returns a tuple of data retrieved from the stream,
  *  and a mutation trigger function
  */
-export declare const useReadableHook: (stream: Promise<ReadableStream<string>>, delay?: number) => [UseReadableHookData, (onDone?: ((value?: string) => void) | undefined) => Promise<void>];
+export declare const useReadableHook: (streamProducer: (...args: unknown[]) => Promise<ReadableStream<string>>, delay?: number) => [UseReadableHookData, (...args: unknown[]) => Promise<void>];

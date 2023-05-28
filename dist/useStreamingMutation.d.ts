@@ -14,3 +14,8 @@ export declare const useStreamingMutation: (path: string, staticParams?: Record<
     done: boolean;
     isStreaming: boolean;
 }, (dynamicParams?: Record<string, PrimitiveParam>, onDone?: ((value?: string) => void) | undefined) => Promise<void>];
+export declare const useStreamingMutationV2: (path: string, staticParams?: Record<string, PrimitiveParam>, delay?: number) => [{
+    value: string;
+    done: boolean;
+    isStreaming: boolean;
+}, (dynamicParams?: Record<string, PrimitiveParam>, onDone?: ((value?: string) => void) | undefined) => Promise<void>];
