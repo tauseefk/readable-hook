@@ -8,14 +8,14 @@ import {
 
 /**
  * Synchronize React state with a ReadableStream.
- * @param {ReadableStream<String>} stream
+ * @param {ReadableStream<String>} streamProducer
  *  readable stream to synchronize with state
  * @param {number} delay
  *  time interval between each stream read call
  * @returns a tuple of data retrieved from the stream,
  *  and a mutation trigger function
  */
-export const useReadableHook = (
+export const useReadable = (
   streamProducer: (
     params?: Record<string, PrimitiveParam>,
   ) => Promise<ReadableStream<string>>,
@@ -70,7 +70,8 @@ export const useReadableHook = (
           isStreaming: false,
         };
         throttledUpdateState();
-        if (options?.onDone) options.onDone(frequentlyUpdatedData.current.value);
+        if (options?.onDone)
+          options.onDone(frequentlyUpdatedData.current.value);
       }
 
       await syncWithStream();

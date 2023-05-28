@@ -24,6 +24,7 @@
     "prebuild": "rimraf ./dist",
     "build": "rollup -c",
     "examples": "vite serve ./examples",
+    "build:examples": "tsc --project ./examples/tsconfig.json && vite build ./examples",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "files": [
