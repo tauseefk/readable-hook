@@ -119,13 +119,21 @@ var useThrottledCallback = function (cb, deps, ms) {
     }, __spreadArray([cb, ms], deps, true));
 };
 
-var DEFAULT_STREAM_DATA = { value: '', done: false, isStreaming: false };
+var DEFAULT_STREAM_DATA = {
+    value: '',
+    done: false,
+    isStreaming: false
+};
 
 /**
  * Synchronize React state with a ReadableStream.
- * @param {ReadableStream<String>} stream readable stream to synchronize with state
- * @param {number} delay time interval between each stream read call
- * @returns {[UseReadableHookData, () => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
+ * @param {ReadableStream<String>} stream
+ *  readable stream to synchronize with state
+ * @param {number} delay
+ *  time interval between each stream read call
+ * @returns {[UseReadableHookData, () => void]}
+ *  returns a tuple of data retrieved from the stream,
+ *  and a mutation trigger function
  */
 var useReadableHook = function (stream, delay) {
     if (delay === void 0) { delay = 500; }
@@ -202,11 +210,13 @@ var readableTextStream = function (path, options) { return __awaiter(void 0, voi
         }
     });
 }); };
+
 /**
  * Query a streaming endpoint
  * @param path streaming endpoint
  * @param delay time interval between each stream read call
- * @returns {[UseStreamingQueryData, () => void]} returns a tuple of data retrieved from the stream, and a query function
+ * @returns {[UseStreamingQueryData, () => void]}
+ * returns a tuple of data retrieved from the stream, and a query function
  */
 var useStreamingQuery = function (path, delay) {
     if (delay === void 0) { delay = 500; }
@@ -277,82 +287,7 @@ var useStreamingQueryV2 = function (path, delay) {
         method: 'GET',
     }), delay);
 };
-/**
- * Trigger a mutation at a streaming endpoint
- * @param path streaming endpoint
- * @param staticParams params passed during hook initialization
- * @param delay time interval between each stream read call
- * @returns {[UseStreamingMutationData, (dynamicParams?: Record<string, PrimitiveParam>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
- */
-var useStreamingMutation = function (path, staticParams, delay) {
-    if (delay === void 0) { delay = 500; }
-    var frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
-    var _a = react.useState(frequentlyUpdatedData.current), _b = _a[0], value = _b.value, done = _b.done, isStreaming = _b.isStreaming, setThrottledData = _a[1];
-    var throttledUpdateState = useThrottledCallback(function () {
-        setThrottledData(__assign({}, frequentlyUpdatedData.current));
-    }, [], delay);
-    var streamMutation = react.useCallback(function (dynamicParams, onDone) { return __awaiter(void 0, void 0, void 0, function () {
-        function syncWithTextStream() {
-            return __awaiter(this, void 0, void 0, function () {
-                var _a, value, done;
-                var _this = this;
-                return __generator(this, function (_b) {
-                    switch (_b.label) {
-                        case 0: return [4 /*yield*/, reader.read()];
-                        case 1:
-                            _a = _b.sent(), value = _a.value, done = _a.done;
-                            if (!done) {
-                                frequentlyUpdatedData.current = { value: value, done: done, isStreaming: true };
-                                throttledUpdateState();
-                                requestAnimationFrame(function () { return __awaiter(_this, void 0, void 0, function () {
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0: return [4 /*yield*/, syncWithTextStream()];
-                                            case 1:
-                                                _a.sent();
-                                                return [2 /*return*/];
-                                        }
-                                    });
-                                }); });
-                                return [2 /*return*/];
-                            }
-                            frequentlyUpdatedData.current = __assign(__assign({}, frequentlyUpdatedData.current), { done: true, isStreaming: false });
-                            throttledUpdateState();
-                            if (onDone)
-                                onDone(frequentlyUpdatedData.current.value);
-                            return [2 /*return*/];
-                    }
-                });
-            });
-        }
-        var response, reader;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
-                    return [4 /*yield*/, readableTextStream(path, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(__assign(__assign({}, staticParams), dynamicParams)),
-                        })];
-                case 1:
-                    response = _a.sent();
-                    if (!response)
-                        throw new Error('No response from stream.');
-                    reader = response.getReader();
-                    return [4 /*yield*/, syncWithTextStream()];
-                case 2:
-                    _a.sent();
-                    return [2 /*return*/];
-            }
-        });
-    }); }, [path, staticParams, throttledUpdateState]);
-    return [{ value: value, done: done, isStreaming: isStreaming }, streamMutation];
-};
 
-exports.useStreamingMutation = useStreamingMutation;
 exports.useStreamingQuery = useStreamingQuery;
 exports.useStreamingQueryV2 = useStreamingQueryV2;
 //# sourceMappingURL=index.js.map

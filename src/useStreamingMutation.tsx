@@ -1,22 +1,27 @@
-import { useCallback, useRef, useState } from 'react';
-import { useThrottledCallback } from './utils/useThrottledCallback';
-import { DEFAULT_STREAM_DATA } from './constants';
-import { useReadableHook } from './useReadableHook';
-import { readableTextStream } from './utils/readableTextStream';
+import { useRef, useState, useCallback } from "react";
+
+import { PrimitiveParam, DEFAULT_STREAM_DATA } from "./constants";
+import { useThrottledCallback } from "./utils/useThrottledCallback";
+import { readableTextStream } from "./utils/readableTextStream";
 
 /**
- * Query a streaming endpoint
+ * Trigger a mutation at a streaming endpoint
  * @param path streaming endpoint
+ * @param staticParams params passed during hook initialization
  * @param delay time interval between each stream read call
- * @returns {[UseStreamingQueryData, () => void]}
- * returns a tuple of data retrieved from the stream, and a query function
+ * @returns { [
+ *  UseStreamingMutationData,
+ *  (dynamicParams?: Record<string, PrimitiveParam>) => void
+ * ] }
  */
-export const useStreamingQuery = (
+export const useStreamingMutation = (
   path: string,
+  staticParams?: Record<string, PrimitiveParam>,
   delay = 500,
 ): [
     { value: string; done: boolean; isStreaming: boolean },
     (
+      dynamicParams?: Record<string, PrimitiveParam>,
       onDone?: (value?: string) => void,
     ) => Promise<void>,
   ] => {
@@ -33,14 +38,19 @@ export const useStreamingQuery = (
     delay
   );
 
-  const streamQuery = useCallback(
+  const streamMutation = useCallback(
     async (
+      dynamicParams?: Record<string, PrimitiveParam>,
       onDone?: (value?: string) => void,
     ) => {
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
       const response = await readableTextStream(path, {
-        method: 'GET',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...staticParams, ...dynamicParams }),
       });
       if (!response) throw new Error('No response from stream.');
 
@@ -69,22 +79,8 @@ export const useStreamingQuery = (
 
       await syncWithTextStream();
     },
-    [path, throttledUpdateState],
+    [path, staticParams, throttledUpdateState],
   );
 
-  return [{ value, done, isStreaming }, streamQuery];
-};
-
-export const useStreamingQueryV2 = (
-  path: string,
-  delay = 500,
-): [
-    { value: string; done: boolean; isStreaming: boolean },
-    (
-      onDone?: (value?: string) => void,
-    ) => Promise<void>,
-  ] => {
-  return useReadableHook(readableTextStream(path, {
-    method: 'GET',
-  }), delay);
+  return [{ value, done, isStreaming }, streamMutation];
 };
