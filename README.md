@@ -1,7 +1,9 @@
 ## Readable Hook
+
 React hooks for wrangling `ReadableStream`s.
 
 ### Installation
+
 ```
 npm i readable-hook --save
 ```
@@ -12,15 +14,52 @@ npm i readable-hook --save
 
 ```Typescript
 const MyComponent: FC = () => {
-    const [streamingData, triggerQuery] = useStreamingQuery('path/to/api/endpoint');
+    const [{ value }, triggerQuery] = useStreamingQuery('path/to/api/endpoint');
     return (
         <div>
-            {streamingData}
+            {value}
             <button onClick={fetchStreamingData} />
         </div>
     );
 };
 ```
-#### useReadableHook
+#### useStreamingMutation
 
-Check [StreamReader](https://github.com/tauseefk/readable-hook/blob/main/examples/src/StreamReader.tsx) component inside examples.
+Allows synchronizing state with a mutation endpoint that returns a streaming response.
+Has a few different ways to pass parameters (at init, and at mutation trigger).
+
+```Typescript
+const MyComponent: FC = () => {
+    const [{ value, isStreaming, done }, triggerMutation] = useStreamingMutation('path/to/api/endpoint', {
+        // params that can be passed during initialization
+    });
+    return (
+        <div>
+            {value}
+            <input onSubmit={e => triggerMutation({
+                params: {
+                    inputValue: e.target.value
+                },
+                onDone: () => console.log("Done streaming") 
+            })} />
+        </div>
+    );
+};
+```
+
+### useReadableHook
+
+Allows synchronizing state with a `ReadableStream`.
+Check [this](https://tauseefk.github.io/readable-hook) for a working example.
+
+```Typescript
+const MyComponent: FC<{ readableStream: ReadableStream }> = ({ readableStream }) => {
+    const [{ value }, synchronize] = useReadable(async () => readableStream, 100);
+    return (
+        <div>
+            {value}
+            <button onClick={synchronize} />
+        </div>
+    );
+};
+```
