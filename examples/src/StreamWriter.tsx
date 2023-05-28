@@ -1,4 +1,4 @@
-import { FC, memo, useRef, useState } from "react";
+import { FC, memo, useRef, useState } from 'react';
 
 const getCharacter = (idx: number) => {
   if (idx % 29 === 0) {

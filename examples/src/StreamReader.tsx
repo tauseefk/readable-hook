@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC } from 'react';
 import { useReadableHook } from '../../src/useReadableHook';
 
 export const StreamReader: FC<{ readableStream: ReadableStream<string> }> = ({
