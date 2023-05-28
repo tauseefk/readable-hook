@@ -65,3 +65,16 @@
   max-height: 50svh;
   overflow-y: scroll;
 }
+
+.scroll-to-bottom {
+  scroll-padding-bottom: 0;
+}
+
+#scroller * {
+  overflow-anchor: none;
+}
+
+#anchor {
+  overflow-anchor: auto;
+  height: 1px;
+}

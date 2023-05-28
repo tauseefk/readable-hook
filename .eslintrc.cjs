@@ -3,6 +3,7 @@ module.exports = {
     'node_modules',
     'dist',
     '.github/workflows',
+    '.eslintrc.cjs',
   ],
   plugins: ['react-hooks'],
   extends: [
@@ -12,4 +13,7 @@ module.exports = {
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+  rules: {
+    'max-len': ["error", { "code": 80 } ],
+  },
 };

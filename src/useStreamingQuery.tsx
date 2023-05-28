@@ -7,7 +7,7 @@ const readableTextStream = async (
   path: string,
   options?: {
     method: 'GET' | 'POST';
-    mode?: "cors" |"no-cors" | "same-origin";
+    mode?: "cors" | "no-cors" | "same-origin";
     body?: string;
     headers?: Record<string, string>;
   },
@@ -22,7 +22,8 @@ const readableTextStream = async (
  * Query a streaming endpoint
  * @param path streaming endpoint
  * @param delay time interval between each stream read call
- * @returns {[UseStreamingQueryData, () => void]} returns a tuple of data retrieved from the stream, and a query function
+ * @returns {[UseStreamingQueryData, () => void]}
+ * returns a tuple of data retrieved from the stream, and a query function
  */
 export const useStreamingQuery = (
   path: string,
@@ -107,7 +108,10 @@ export const useStreamingQueryV2 = (
  * @param path streaming endpoint
  * @param staticParams params passed during hook initialization
  * @param delay time interval between each stream read call
- * @returns {[UseStreamingMutationData, (dynamicParams?: Record<string, PrimitiveParam>) => void]} returns a tuple of data retrieved from the stream, and a mutation trigger function
+ * @returns { [
+ *  UseStreamingMutationData,
+ *  (dynamicParams?: Record<string, PrimitiveParam>) => void
+ * ] }
  */
 export const useStreamingMutation = (
   path: string,
