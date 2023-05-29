@@ -76,6 +76,9 @@ function __spreadArray(to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 }
 
+// This utility heavily borrows from react-hookz/useThrottledCallback,
+// The goal was to ensure no dependencies.
+// https://github.com/react-hookz/web/blob/master/src/useValidator/index.ts
 var useThrottledCallback = function (cb, deps, ms) {
     if (ms === void 0) { ms = 500; }
     var timeout = react.useRef();
