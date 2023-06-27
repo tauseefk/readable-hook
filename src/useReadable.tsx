@@ -28,13 +28,13 @@ export const useReadable = (
   }) => Promise<void>,
 ] => {
   const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
-  const [{ value, done, isStreaming }, setThrottledData] = useState(
+  const [{ value, isStreaming }, setData] = useState(
     frequentlyUpdatedData.current,
   );
 
   const throttledUpdateState = useThrottledCallback(
     () => {
-      setThrottledData({ ...frequentlyUpdatedData.current });
+      setData({ ...frequentlyUpdatedData.current });
     },
     [],
     delay,
@@ -52,32 +52,23 @@ export const useReadable = (
 
       const reader = response.getReader();
 
-      async function syncWithStream() {
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
         const { value, done } = await reader.read();
-        if (!done) {
-          frequentlyUpdatedData.current = { value, done, isStreaming: true };
-          throttledUpdateState();
 
-          requestAnimationFrame(async () => {
-            await syncWithStream();
-          });
-          return;
-        }
+        if (done) break;
 
-        frequentlyUpdatedData.current = {
-          ...frequentlyUpdatedData.current,
-          done: true,
-          isStreaming: false,
-        };
+        frequentlyUpdatedData.current = { value, isStreaming: true };
         throttledUpdateState();
-        if (options?.onDone)
-          options.onDone(frequentlyUpdatedData.current.value);
       }
 
-      await syncWithStream();
+      frequentlyUpdatedData.current = {
+        ...frequentlyUpdatedData.current,
+        isStreaming: false,
+      };
     },
     [streamProducer, throttledUpdateState],
   );
 
-  return [{ value, done, isStreaming }, synchronize];
+  return [{ value, isStreaming }, synchronize];
 };
