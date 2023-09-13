@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useThrottledCallback } from './utils/useThrottledCallback';
 import {
   DEFAULT_STREAM_DATA,
@@ -27,14 +27,11 @@ export const useReadable = (
     onDone?: () => void;
   }) => Promise<void>,
 ] => {
-  const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
-  const [{ value, isStreaming }, setData] = useState(
-    frequentlyUpdatedData.current,
-  );
+  const [{ value, isStreaming }, setData] = useState(DEFAULT_STREAM_DATA);
 
   const throttledUpdateState = useThrottledCallback(
-    () => {
-      setData({ ...frequentlyUpdatedData.current });
+    (data: UseReadableHookData) => {
+      setData(data);
     },
     [],
     delay,
@@ -45,8 +42,6 @@ export const useReadable = (
       params?: Record<string, PrimitiveParam>;
       onDone?: (value?: string) => void;
     }) => {
-      frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
-
       const response = await streamProducer(options?.params);
       if (!response) throw new Error('No response from stream.');
 
@@ -58,14 +53,8 @@ export const useReadable = (
 
         if (done) break;
 
-        frequentlyUpdatedData.current = { value, isStreaming: true };
-        throttledUpdateState();
+        throttledUpdateState({ value, isStreaming: true });
       }
-
-      frequentlyUpdatedData.current = {
-        ...frequentlyUpdatedData.current,
-        isStreaming: false,
-      };
     },
     [streamProducer, throttledUpdateState],
   );

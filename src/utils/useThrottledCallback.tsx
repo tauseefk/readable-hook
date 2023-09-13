@@ -27,8 +27,9 @@
 import { DependencyList, useRef, useEffect, useMemo } from 'react';
 
 export interface ThrottledFunction<Fn extends (...args: unknown[]) => unknown> {
-  (this: ThisParameterType<Fn>, ...args: Parameters<Fn>): void;
+  (...args: Parameters<Fn>): void;
 }
+
 export const useThrottledCallback = <Fn extends (...args: unknown[]) => void>(
   cb: Fn,
   deps: DependencyList,
@@ -50,7 +51,7 @@ export const useThrottledCallback = <Fn extends (...args: unknown[]) => void>(
   return useMemo(() => {
     const execCbAndSchedule = (args: Parameters<Fn>) => {
       cachedArgs.current = undefined;
-      cb(args);
+      cb(...args);
 
       timeout.current = setTimeout(() => {
         timeout.current = undefined;

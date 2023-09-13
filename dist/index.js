@@ -95,7 +95,7 @@ var useThrottledCallback = function (cb, deps, ms) {
     return react.useMemo(function () {
         var execCbAndSchedule = function (args) {
             cachedArgs.current = undefined;
-            cb(args);
+            cb.apply(void 0, args);
             timeout.current = setTimeout(function () {
                 timeout.current = undefined;
                 if (cachedArgs.current) {
@@ -124,7 +124,6 @@ var useThrottledCallback = function (cb, deps, ms) {
 
 var DEFAULT_STREAM_DATA = {
     value: '',
-    done: false,
     isStreaming: false,
 };
 
@@ -139,64 +138,34 @@ var DEFAULT_STREAM_DATA = {
  */
 var useReadable = function (streamProducer, delay) {
     if (delay === void 0) { delay = 500; }
-    var frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
-    var _a = react.useState(frequentlyUpdatedData.current), _b = _a[0], value = _b.value, done = _b.done, isStreaming = _b.isStreaming, setThrottledData = _a[1];
-    var throttledUpdateState = useThrottledCallback(function () {
-        setThrottledData(__assign({}, frequentlyUpdatedData.current));
+    var _a = react.useState(DEFAULT_STREAM_DATA), _b = _a[0], value = _b.value, isStreaming = _b.isStreaming, setData = _a[1];
+    var throttledUpdateState = useThrottledCallback(function (data) {
+        setData(data);
     }, [], delay);
     var synchronize = react.useCallback(function (options) { return __awaiter(void 0, void 0, void 0, function () {
-        function syncWithStream() {
-            return __awaiter(this, void 0, void 0, function () {
-                var _a, value, done;
-                var _this = this;
-                return __generator(this, function (_b) {
-                    switch (_b.label) {
-                        case 0: return [4 /*yield*/, reader.read()];
-                        case 1:
-                            _a = _b.sent(), value = _a.value, done = _a.done;
-                            if (!done) {
-                                frequentlyUpdatedData.current = { value: value, done: done, isStreaming: true };
-                                throttledUpdateState();
-                                requestAnimationFrame(function () { return __awaiter(_this, void 0, void 0, function () {
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0: return [4 /*yield*/, syncWithStream()];
-                                            case 1:
-                                                _a.sent();
-                                                return [2 /*return*/];
-                                        }
-                                    });
-                                }); });
-                                return [2 /*return*/];
-                            }
-                            frequentlyUpdatedData.current = __assign(__assign({}, frequentlyUpdatedData.current), { done: true, isStreaming: false });
-                            throttledUpdateState();
-                            if (options === null || options === void 0 ? void 0 : options.onDone)
-                                options.onDone(frequentlyUpdatedData.current.value);
-                            return [2 /*return*/];
-                    }
-                });
-            });
-        }
-        var response, reader;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
-                    return [4 /*yield*/, streamProducer(options === null || options === void 0 ? void 0 : options.params)];
+        var response, reader, _a, value_1, done;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0: return [4 /*yield*/, streamProducer(options === null || options === void 0 ? void 0 : options.params)];
                 case 1:
-                    response = _a.sent();
+                    response = _b.sent();
                     if (!response)
                         throw new Error('No response from stream.');
                     reader = response.getReader();
-                    return [4 /*yield*/, syncWithStream()];
+                    _b.label = 2;
                 case 2:
-                    _a.sent();
-                    return [2 /*return*/];
+                    return [4 /*yield*/, reader.read()];
+                case 3:
+                    _a = _b.sent(), value_1 = _a.value, done = _a.done;
+                    if (done)
+                        return [3 /*break*/, 4];
+                    throttledUpdateState({ value: value_1, isStreaming: true });
+                    return [3 /*break*/, 2];
+                case 4: return [2 /*return*/];
             }
         });
     }); }, [streamProducer, throttledUpdateState]);
-    return [{ value: value, done: done, isStreaming: isStreaming }, synchronize];
+    return [{ value: value, isStreaming: isStreaming }, synchronize];
 };
 
 var readableTextStream = function (path, options) { return __awaiter(void 0, void 0, void 0, function () {

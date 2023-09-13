@@ -7,7 +7,7 @@ export const useStreamingMutation = (
   staticParams?: Record<string, PrimitiveParam>,
   delay = 500,
 ): [
-  { value: string; done: boolean; isStreaming: boolean },
+  { value: string; isStreaming: boolean },
   (options?: {
     params?: Record<string, PrimitiveParam>;
     onDone?: (value?: string) => void;
