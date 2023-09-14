@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // This utility heavily borrows from react-hookz/useThrottledCallback,
 // The goal was to ensure no dependencies.
 // https://github.com/react-hookz/web/blob/master/src/useValidator/index.ts
@@ -26,11 +28,11 @@
 
 import { DependencyList, useRef, useEffect, useMemo } from 'react';
 
-export interface ThrottledFunction<Fn extends (...args: unknown[]) => unknown> {
+export interface ThrottledFunction<Fn extends (...args: any[]) => any> {
   (...args: Parameters<Fn>): void;
 }
 
-export const useThrottledCallback = <Fn extends (...args: unknown[]) => void>(
+export const useThrottledCallback = <Fn extends (...args: any[]) => void>(
   cb: Fn,
   deps: DependencyList,
   ms = 500,

@@ -12,7 +12,7 @@ import {
  *  readable stream to synchronize with state
  * @param {number} delay
  *  time interval between each stream read call
- * @returns a tuple of data retrieved from the stream,
+ * @returns a tuple of data retrieved from the stream
  *  and a mutation trigger function
  */
 export const useReadable = (
@@ -27,7 +27,8 @@ export const useReadable = (
     onDone?: () => void;
   }) => Promise<void>,
 ] => {
-  const [{ value, isStreaming }, setData] = useState(DEFAULT_STREAM_DATA);
+  const [{ value, isStreaming }, setData] =
+    useState<UseReadableHookData>(DEFAULT_STREAM_DATA);
 
   const throttledUpdateState = useThrottledCallback(
     (data: UseReadableHookData) => {
