@@ -4,7 +4,9 @@ import { useReadable } from '../../src/useReadable';
 export const StreamReader: FC<{ readableStream: ReadableStream<string> }> = ({
   readableStream,
 }) => {
-  const [{ value }, synchronize] = useReadable(async () => readableStream, 100);
+  const [{ value }, synchronize] = useReadable(async () => readableStream, {
+    delay: 100,
+  });
 
   const line = value.split('\n').map((line, idx) => <p key={idx}>{line}</p>);
 
