@@ -5,7 +5,10 @@ import { useReadable } from './useReadable';
 export const useStreamingMutation = (
   path: string,
   staticParams?: Record<string, PrimitiveParam>,
-  delay = 500,
+  options?: {
+    accumulate?: boolean;
+    delay?: number;
+  },
 ): [
   { value: string; isStreaming: boolean },
   (options?: {
@@ -25,5 +28,5 @@ export const useStreamingMutation = (
           ...params,
         }),
       }),
-    delay,
+    options,
   );

@@ -1,5 +1,8 @@
 import { PrimitiveParam } from './constants';
-export declare const useStreamingMutation: (path: string, staticParams?: Record<string, PrimitiveParam>, delay?: number) => [{
+export declare const useStreamingMutation: (path: string, staticParams?: Record<string, PrimitiveParam>, options?: {
+    accumulate?: boolean;
+    delay?: number;
+}) => [{
     value: string;
     isStreaming: boolean;
 }, (options?: {

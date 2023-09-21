@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { useThrottledCallback } from './utils/useThrottledCallback';
 import {
   DEFAULT_STREAM_DATA,
@@ -19,7 +19,10 @@ export const useReadable = (
   streamProducer: (
     params?: Record<string, PrimitiveParam>,
   ) => Promise<ReadableStream<string>>,
-  delay = 500,
+  { delay, accumulate }: { delay?: number; accumulate?: boolean } = {
+    delay: 500,
+    accumulate: false,
+  },
 ): [
   UseReadableHookData,
   (options?: {
@@ -27,12 +30,16 @@ export const useReadable = (
     onDone?: () => void;
   }) => Promise<void>,
 ] => {
-  const [{ value, isStreaming }, setData] =
-    useState<UseReadableHookData>(DEFAULT_STREAM_DATA);
+  const frequentlyUpdatedData = useRef(DEFAULT_STREAM_DATA);
+  const [{ value, isStreaming }, setData] = useState<UseReadableHookData>(
+    frequentlyUpdatedData.current,
+  );
 
   const throttledUpdateState = useThrottledCallback(
-    (data: UseReadableHookData) => {
-      setData(data);
+    () => {
+      setData({
+        ...frequentlyUpdatedData.current,
+      });
     },
     [],
     delay,
@@ -41,8 +48,11 @@ export const useReadable = (
   const synchronize = useCallback(
     async (options?: {
       params?: Record<string, PrimitiveParam>;
-      onDone?: (value?: string) => void;
+      onDone?: () => void;
     }) => {
+      // flush state
+      frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
+
       const response = await streamProducer(options?.params);
       if (!response) throw new Error('No response from stream.');
 
@@ -54,10 +64,25 @@ export const useReadable = (
 
         if (done) break;
 
-        throttledUpdateState({ value, isStreaming: true });
+        frequentlyUpdatedData.current = {
+          isStreaming: true,
+          value: accumulate
+            ? `${frequentlyUpdatedData.current.value}${value}`
+            : value,
+        };
+
+        throttledUpdateState();
       }
+
+      frequentlyUpdatedData.current = {
+        ...frequentlyUpdatedData.current,
+        isStreaming: false,
+      };
+
+      throttledUpdateState();
+      options?.onDone?.();
     },
-    [streamProducer, throttledUpdateState],
+    [accumulate, streamProducer, throttledUpdateState],
   );
 
   return [{ value, isStreaming }, synchronize];

@@ -76,9 +76,7 @@ function __spreadArray(to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 }
 
-// This utility heavily borrows from react-hookz/useThrottledCallback,
-// The goal was to ensure no dependencies.
-// https://github.com/react-hookz/web/blob/master/src/useValidator/index.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 var useThrottledCallback = function (cb, deps, ms) {
     if (ms === void 0) { ms = 500; }
     var timeout = react.useRef();
@@ -133,38 +131,56 @@ var DEFAULT_STREAM_DATA = {
  *  readable stream to synchronize with state
  * @param {number} delay
  *  time interval between each stream read call
- * @returns a tuple of data retrieved from the stream,
+ * @returns a tuple of data retrieved from the stream
  *  and a mutation trigger function
  */
-var useReadable = function (streamProducer, delay) {
-    if (delay === void 0) { delay = 500; }
-    var _a = react.useState(DEFAULT_STREAM_DATA), _b = _a[0], value = _b.value, isStreaming = _b.isStreaming, setData = _a[1];
-    var throttledUpdateState = useThrottledCallback(function (data) {
-        setData(data);
+var useReadable = function (streamProducer, _a) {
+    var _b = _a === void 0 ? {
+        delay: 500,
+        accumulate: false,
+    } : _a, delay = _b.delay, accumulate = _b.accumulate;
+    var frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
+    var _c = react.useState(frequentlyUpdatedData.current), _d = _c[0], value = _d.value, isStreaming = _d.isStreaming, setData = _c[1];
+    var throttledUpdateState = useThrottledCallback(function () {
+        setData(__assign({}, frequentlyUpdatedData.current));
     }, [], delay);
     var synchronize = react.useCallback(function (options) { return __awaiter(void 0, void 0, void 0, function () {
         var response, reader, _a, value_1, done;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, streamProducer(options === null || options === void 0 ? void 0 : options.params)];
+        var _b;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    // flush state
+                    frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
+                    return [4 /*yield*/, streamProducer(options === null || options === void 0 ? void 0 : options.params)];
                 case 1:
-                    response = _b.sent();
+                    response = _c.sent();
                     if (!response)
                         throw new Error('No response from stream.');
                     reader = response.getReader();
-                    _b.label = 2;
+                    _c.label = 2;
                 case 2:
                     return [4 /*yield*/, reader.read()];
                 case 3:
-                    _a = _b.sent(), value_1 = _a.value, done = _a.done;
+                    _a = _c.sent(), value_1 = _a.value, done = _a.done;
                     if (done)
                         return [3 /*break*/, 4];
-                    throttledUpdateState({ value: value_1, isStreaming: true });
+                    frequentlyUpdatedData.current = {
+                        isStreaming: true,
+                        value: accumulate
+                            ? "".concat(frequentlyUpdatedData.current.value).concat(value_1)
+                            : value_1,
+                    };
+                    throttledUpdateState();
                     return [3 /*break*/, 2];
-                case 4: return [2 /*return*/];
+                case 4:
+                    frequentlyUpdatedData.current = __assign(__assign({}, frequentlyUpdatedData.current), { isStreaming: false });
+                    throttledUpdateState();
+                    (_b = options === null || options === void 0 ? void 0 : options.onDone) === null || _b === void 0 ? void 0 : _b.call(options);
+                    return [2 /*return*/];
             }
         });
-    }); }, [streamProducer, throttledUpdateState]);
+    }); }, [accumulate, streamProducer, throttledUpdateState]);
     return [{ value: value, isStreaming: isStreaming }, synchronize];
 };
 
@@ -191,8 +207,7 @@ var useStreamingQuery = function (path, delay) {
     }, delay);
 };
 
-var useStreamingMutation = function (path, staticParams, delay) {
-    if (delay === void 0) { delay = 500; }
+var useStreamingMutation = function (path, staticParams, options) {
     return useReadable(function (params) {
         return readableTextStream(path, {
             method: 'POST',
@@ -201,7 +216,7 @@ var useStreamingMutation = function (path, staticParams, delay) {
             },
             body: JSON.stringify(__assign(__assign({}, staticParams), params)),
         });
-    }, delay);
+    }, options);
 };
 
 exports.useReadable = useReadable;
