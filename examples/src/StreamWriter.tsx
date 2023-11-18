@@ -1,12 +1,11 @@
 import { FC, memo, useRef, useState } from 'react';
+import { GRID_WIDTH } from './constants';
 
 const getCharacter = (idx: number) => {
-  if (idx % 23 === 0) {
+  if (idx % (GRID_WIDTH + 1) === 0) {
     return '\n';
   }
-  if (idx % 2 === 0) {
-    return '1';
-  }
+
   return '0';
 };
 
@@ -40,9 +39,13 @@ export const StreamWriter: FC<StreamWriterProps> = ({ writableStream }) => {
   return (
     <div className="flex flex-row gap justify-around">
       {!rafId ? (
-        <button onClick={appendAndScheduleNext}>Start Streaming</button>
+        <button className="ghost-rect" onClick={appendAndScheduleNext}>
+          Start Streaming
+        </button>
       ) : (
-        <button onClick={handleStopTimer}>Stop Streaming</button>
+        <button className="ghost-rect" onClick={handleStopTimer}>
+          Stop Streaming
+        </button>
       )}
     </div>
   );
