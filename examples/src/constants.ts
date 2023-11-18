@@ -16,4 +16,5 @@ export const getBlockColor = (idx: number) => {
   return BLOCK_CLOLORS[idx % BLOCK_CLOLORS.length];
 };
 
-export const LINES_TO_RENDER = 17;
+export const GRID_WIDTH = 16;
+export const GRID_HEIGHT = 2 * GRID_WIDTH - 3;

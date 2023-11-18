@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useReadable } from '../../src/useReadable';
-import { LINES_TO_RENDER, getBlockColor } from './constants';
+import { GRID_HEIGHT, getBlockColor } from './constants';
 
 export const StreamReader: FC<{ readableStream: ReadableStream<string> }> = ({
   readableStream,
@@ -11,7 +11,7 @@ export const StreamReader: FC<{ readableStream: ReadableStream<string> }> = ({
   });
 
   const lines = value.split('\n');
-  const tailLineIdx = Math.max(0, lines.length - LINES_TO_RENDER);
+  const tailLineIdx = Math.max(0, lines.length - GRID_HEIGHT);
   const renderableLines = lines.slice(tailLineIdx).map((line, lineIdx) => {
     const elements = line.split('').map((_, charIdx) => {
       return (
@@ -27,24 +27,22 @@ export const StreamReader: FC<{ readableStream: ReadableStream<string> }> = ({
       );
     });
     return (
-      <div className="flex flex-row gap" key={lineIdx}>
+      <div className="flex flex-row" key={lineIdx}>
         {elements}
       </div>
     );
   });
 
   return (
-    <div className="flex flex-col gap scrollbar-trigger border w-full relative">
-      <div className="ghost-rect">
-        <div className="flex card stream-output justify-around relative">
-          {!value ? (
-            <button className="m-auto-0" onClick={() => synchronize()}>
-              Synchronize
-            </button>
-          ) : (
-            <div className="gap flex flex-col">{renderableLines}</div>
-          )}
-        </div>
+    <div className="flex flex-col gap border w-full relative">
+      <div className="flex card stream-output justify-around relative">
+        {!value ? (
+          <button className="m-auto-0 ghost-rect" onClick={() => synchronize()}>
+            Synchronize
+          </button>
+        ) : (
+          <div className="gap flex flex-col">{renderableLines}</div>
+        )}
       </div>
     </div>
   );

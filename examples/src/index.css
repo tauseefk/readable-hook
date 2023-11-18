@@ -37,28 +37,40 @@ h1 {
   line-height: 1.1;
 }
 
+p {
+  margin: 0 0;
+}
+
 button {
-  max-height: 40px;
-  border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid #DA5E46;
+  position: relative;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: transparent;
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  border-color: white;
 }
 
-p {
-  margin: 0 0;
+button:focus,
+button:focus-visible {
+  outline: none;
+}
+
+.ghost-rect::before {
+  border: 1px solid #DA5E46;
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: -4px;
+  bottom: -4px;
+  transition: border-color 0.25s;
 }
 
 @media (prefers-color-scheme: light) {
@@ -69,8 +81,24 @@ p {
   a:hover {
     color: #747bff;
   }
+
   button {
-    background-color: #f9f9f9;
+    border: 1px solid #4373B6;
+    color: #4373B6;
+  }
+
+  button:hover {
+    border-color: #213547;
+    color: #213547;
+  }
+
+  .ghost-rect::before {
+    border: 1px solid #4373B6;
+  }
+
+  .ghost-rect:hover:before {
+    color: #213547;
+    border-color: #213547;
   }
 }
 
