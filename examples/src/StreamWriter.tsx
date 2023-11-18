@@ -14,14 +14,14 @@ interface StreamWriterProps {
   writableStream: WritableStream;
 }
 export const StreamWriter: FC<StreamWriterProps> = ({ writableStream }) => {
-  const data = useRef('');
+  const data = useRef(0);
   const [rafId, setRafId] = useState<number>();
 
   function appendAndScheduleNext() {
     const writer = writableStream.getWriter();
-    writer.write(data.current);
+    writer.write(getCharacter(data.current));
+    data.current = data.current + 1;
     writer.releaseLock();
-    data.current = `${data.current} ${getCharacter(data.current.length)} `;
 
     setRafId(
       requestAnimationFrame(() => {

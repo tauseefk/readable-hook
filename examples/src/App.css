@@ -1,3 +1,7 @@
+.relative {
+  position: relative;
+}
+
 .card {
   padding: 2em;
 }
@@ -95,6 +99,30 @@
   gap: 2em;
   justify-content: center;
   align-items: center;
+}
+
+.dot {
+  display: inline-block;
+  width: 16px;
+  height: 16px
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.ghost-rect {
+  border: 1px solid #000000;
+  content: "";
+  position: relative;
+  top: -6px;
+  left: -6px;
+  width: 100%;
+  height: 100%;
 }
 
 @media (max-width: 400px) {
