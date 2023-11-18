@@ -17,4 +17,4 @@ export const getBlockColor = (idx: number) => {
 };
 
 export const GRID_WIDTH = 16;
-export const GRID_HEIGHT = 2 * GRID_WIDTH - 3;
+export const GRID_HEIGHT = 20;
