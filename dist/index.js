@@ -138,7 +138,8 @@ var useReadable = function (streamProducer, _a) {
     var _b = _a === void 0 ? {
         delay: 500,
         accumulate: false,
-    } : _a, delay = _b.delay, accumulate = _b.accumulate;
+        accumulator: function (acc, curr) { return "".concat(acc).concat(curr); },
+    } : _a, delay = _b.delay, accumulate = _b.accumulate, accumulator = _b.accumulator;
     var frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
     var _c = react.useState(frequentlyUpdatedData.current), _d = _c[0], value = _d.value, isStreaming = _d.isStreaming, setData = _c[1];
     var throttledUpdateState = useThrottledCallback(function () {
@@ -156,7 +157,7 @@ var useReadable = function (streamProducer, _a) {
                 case 1:
                     response = _c.sent();
                     if (!response)
-                        throw new Error('No response from stream.');
+                        throw new Error("No response from stream.");
                     reader = response.getReader();
                     _c.label = 2;
                 case 2:
@@ -167,8 +168,8 @@ var useReadable = function (streamProducer, _a) {
                         return [3 /*break*/, 4];
                     frequentlyUpdatedData.current = {
                         isStreaming: true,
-                        value: accumulate
-                            ? "".concat(frequentlyUpdatedData.current.value).concat(value_1)
+                        value: accumulate && accumulator
+                            ? accumulator(frequentlyUpdatedData.current.value, value_1)
                             : value_1,
                     };
                     throttledUpdateState();
@@ -180,7 +181,7 @@ var useReadable = function (streamProducer, _a) {
                     return [2 /*return*/];
             }
         });
-    }); }, [accumulate, streamProducer, throttledUpdateState]);
+    }); }, [accumulate, accumulator, streamProducer, throttledUpdateState]);
     return [{ value: value, isStreaming: isStreaming }, synchronize];
 };
 

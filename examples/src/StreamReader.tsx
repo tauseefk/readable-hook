@@ -1,49 +1,54 @@
-import { FC } from 'react';
-import { useReadable } from '../../src/useReadable';
-import { GRID_HEIGHT, getBlockColor } from './constants';
+import { FC, Fragment } from "react";
+import { useReadable } from "../../src/useReadable";
+import { GRID_HEIGHT } from "./constants";
 
 export const StreamReader: FC<{ readableStream: ReadableStream<string> }> = ({
-  readableStream,
+	readableStream,
 }) => {
-  const [{ value }, synchronize] = useReadable(async () => readableStream, {
-    accumulate: true,
-    delay: 100,
-  });
+	const [{ value }, synchronize] = useReadable(async () => readableStream, {
+		accumulate: true,
+		accumulator: (acc, curr) =>
+			acc
+				.split("\n")
+				.slice(-1 * GRID_HEIGHT)
+				.join("\n")
+				.concat(curr)
+				.concat("\n"),
+		delay: 100,
+	});
 
-  const lines = value.split('\n');
-  const tailLineIdx = Math.max(0, lines.length - GRID_HEIGHT);
-  const renderableLines = lines.slice(tailLineIdx).map((line, lineIdx) => {
-    const elements = line.split('').map((_, charIdx) => {
-      return (
-        <span
-          style={{
-            backgroundColor: getBlockColor(
-              (tailLineIdx + lineIdx) * line.length + charIdx,
-            ),
-          }}
-          key={`${lineIdx}_${charIdx}`}
-          className="dot"
-        ></span>
-      );
-    });
-    return (
-      <div className="flex flex-row" key={lineIdx}>
-        {elements}
-      </div>
-    );
-  });
+	const lines = value.split("\n");
+	const renderableLines = lines.map((line, lineIdx) => {
+		const elements = line.split(",").map((num, charIdx) => {
+			return (
+				<span
+					className={`dot color-${parseInt(num, 10) + 1}`}
+					key={`${lineIdx}_${
+						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+						charIdx
+					}`}
+				/>
+			);
+		});
+		// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+		return <Fragment key={lineIdx}>{elements}</Fragment>;
+	});
 
-  return (
-    <div className="flex flex-col gap border w-full relative">
-      <div className="flex card stream-output justify-around relative">
-        {!value ? (
-          <button className="m-auto-0 ghost-rect" onClick={() => synchronize()}>
-            Synchronize
-          </button>
-        ) : (
-          <div className="gap flex flex-col">{renderableLines}</div>
-        )}
-      </div>
-    </div>
-  );
+	return (
+		<div className="flex flex-col gap border w-full relative">
+			<div className="flex card stream-output justify-around relative">
+				{!value ? (
+					<button
+						type="button"
+						className="m-auto-0 ghost-rect"
+						onClick={() => synchronize()}
+					>
+						Synchronize
+					</button>
+				) : (
+					<div className="grid grid-cols-18 rows-[16px]">{renderableLines}</div>
+				)}
+			</div>
+		</div>
+	);
 };

@@ -1,54 +1,68 @@
-import { FC, memo, useRef, useState } from 'react';
-import { GRID_WIDTH } from './constants';
+import { FC, memo, useRef, useState } from "react";
+import { DEFAULT_COLORS, GRID_HEIGHT, GRID_WIDTH } from "./constants";
 
-const getCharacter = (idx: number) => {
-  if (idx % (GRID_WIDTH + 1) === 0) {
-    return '\n';
-  }
+const getRandomUInt = () => {
+	return Math.floor(Math.random() * DEFAULT_COLORS.length);
+};
 
-  return '0';
+const BLOCK_NUMBERS = Array(GRID_WIDTH * GRID_HEIGHT)
+	.fill(null)
+	.map(() => getRandomUInt());
+
+const getCharacters = (idx: number) => {
+	const idxAdj = idx * GRID_WIDTH;
+	const idxStart = idxAdj % BLOCK_NUMBERS.length;
+	const idxEnd = (idxAdj + GRID_WIDTH) % BLOCK_NUMBERS.length;
+
+	return idxEnd < idxStart
+		? [...BLOCK_NUMBERS.slice(idxStart), ...BLOCK_NUMBERS.slice(0, idxEnd)]
+		: BLOCK_NUMBERS.slice(idxStart, idxEnd);
 };
 
 interface StreamWriterProps {
-  writableStream: WritableStream;
+	writableStream: WritableStream;
 }
+
 export const StreamWriter: FC<StreamWriterProps> = ({ writableStream }) => {
-  const data = useRef(0);
-  const [rafId, setRafId] = useState<number>();
+	const data = useRef(0);
+	const [rafId, setRafId] = useState<NodeJS.Timeout>();
 
-  function appendAndScheduleNext() {
-    const writer = writableStream.getWriter();
-    writer.write(getCharacter(data.current));
-    data.current = data.current + 1;
-    writer.releaseLock();
+	function appendAndScheduleNext() {
+		const writer = writableStream.getWriter();
+		writer.write(getCharacters(data.current));
+		data.current = data.current + 1;
+		writer.releaseLock();
 
-    setRafId(
-      requestAnimationFrame(() => {
-        appendAndScheduleNext();
-      }),
-    );
-  }
+		setRafId(
+			setTimeout(() => {
+				appendAndScheduleNext();
+			}, 200),
+		);
+	}
 
-  function handleStopTimer() {
-    if (rafId) {
-      cancelAnimationFrame(rafId);
-      setRafId(undefined);
-    }
-  }
+	function handleStartTimer() {
+		appendAndScheduleNext();
+	}
+	function handleStopTimer() {
+		if (rafId) {
+			clearTimeout(rafId);
+			setRafId(undefined);
+		}
+	}
 
-  return (
-    <div className="flex flex-row gap justify-around">
-      {!rafId ? (
-        <button className="ghost-rect" onClick={appendAndScheduleNext}>
-          Start Streaming
-        </button>
-      ) : (
-        <button className="ghost-rect" onClick={handleStopTimer}>
-          Stop Streaming
-        </button>
-      )}
-    </div>
-  );
+	return (
+		<div className="flex flex-row gap justify-around">
+			{!rafId ? (
+				<button type="button" className="ghost-rect" onClick={handleStartTimer}>
+					Start Streaming
+				</button>
+			) : (
+				<button type="button" className="ghost-rect" onClick={handleStopTimer}>
+					Stop Streaming
+				</button>
+			)}
+		</div>
+	);
 };
 
 export const MemoStreamWriter = memo(StreamWriter);

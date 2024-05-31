@@ -39,6 +39,10 @@
   row-gap: 8px;
 }
 
+.row-gap {
+  row-gap: 8px;
+}
+
 .justify-around {
   justify-content: space-around;
 }
@@ -97,8 +101,21 @@
 
 .grid {
   display: grid;
+}
+
+.grid .rows-\[16px\] {
+  grid-auto-rows: 16px;
+}
+
+.grid-gap-2 {
   gap: 2em;
+}
+
+.justify-center {
   justify-content: center;
+}
+
+.align-center {
   align-items: center;
 }
 
@@ -131,5 +148,52 @@
 @media (min-width: 768px) {
   .stream-output {
     min-width: 400px;
+  }
+}
+
+.grid-cols-18	{
+  grid-template-columns: repeat(18, minmax(0, 1fr));
+}
+
+
+.color-1 {
+  background: #802392;
+}
+
+.color-2 {
+  background: #995FA3;
+}
+
+.color-3 {
+  background: #9A98B5;
+}
+
+.color-4 {
+  background: #A0B9C6;
+}
+
+.color-5 {
+  background: #A5F8D3;
+}
+
+@media (prefers-color-scheme: light) {
+  .color-1 {
+    background: #DA5E46;
+  }
+
+  .color-2 {
+    background: #FA9478;
+  }
+
+  .color-3 {
+    background: #FEDEB8;
+  }
+
+  .color-4 {
+    background: #4373B6;
+  }
+
+  .color-5 {
+    background: #184382;
   }
 }
