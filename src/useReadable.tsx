@@ -1,10 +1,10 @@
-import { useCallback, useState, useRef } from 'react';
-import { useThrottledCallback } from './utils/useThrottledCallback';
+import { useCallback, useRef, useState } from 'react';
 import {
   DEFAULT_STREAM_DATA,
   PrimitiveParam,
   UseReadableHookData,
 } from './constants';
+import { useThrottledCallback } from './utils/useThrottledCallback';
 
 /**
  * Synchronize React state with a ReadableStream.

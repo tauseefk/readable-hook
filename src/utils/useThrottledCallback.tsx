@@ -26,7 +26,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import { DependencyList, useRef, useEffect, useMemo } from 'react';
+import { DependencyList, useEffect, useMemo, useRef } from 'react';
 
 export type ThrottledFunction<Fn extends (...args: unknown[]) => unknown> = (
   ...args: Parameters<Fn>
