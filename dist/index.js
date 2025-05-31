@@ -65,6 +65,48 @@ const useThrottledCallback = (cb, deps, ms = 500) => {
 };
 
 /**
+ * Synchronize React state with an Async Iterable.
+ * @param {AsyncGenerator<T>} asyncGenerator that creates the async iterable to synchronize with state
+ * @param {number} delay  time interval between each stream read call
+ * @returns a tuple of data retrieved from the stream
+and a mutation trigger function
+ */
+// biome-ignore lint/complexity/noUselessTypeConstraint: typescript compiler won't have me
+const useIterable = (asyncGenerator, { delay, accumulate, accumulator, } = {
+    delay: 500,
+    accumulate: false,
+}) => {
+    const frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
+    const [{ value, isStreaming }, setData] = react.useState(frequentlyUpdatedData.current);
+    const throttledUpdateState = useThrottledCallback(() => {
+        setData({
+            ...frequentlyUpdatedData.current,
+        });
+    }, [], delay);
+    const synchronize = react.useCallback(async (options) => {
+        // flush state
+        frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
+        const response = await asyncGenerator(options?.params);
+        for await (const value of response) {
+            frequentlyUpdatedData.current = {
+                isStreaming: true,
+                value: accumulate && accumulator
+                    ? accumulator(frequentlyUpdatedData.current.value, value)
+                    : value,
+            };
+            throttledUpdateState();
+        }
+        frequentlyUpdatedData.current = {
+            ...frequentlyUpdatedData.current,
+            isStreaming: false,
+        };
+        throttledUpdateState();
+        options?.onDone?.();
+    }, [accumulate, accumulator, asyncGenerator, throttledUpdateState]);
+    return [{ value, isStreaming }, synchronize];
+};
+
+/**
  * Synchronize React state with a ReadableStream.
  * @param {ReadableStream<T>} streamProducer
  *  readable stream to synchronize with state
@@ -137,6 +179,7 @@ const useStreamingMutation = (path, staticParams, options) => useReadable((param
     }),
 }), options);
 
+exports.useIterable = useIterable;
 exports.useReadable = useReadable;
 exports.useStreamingMutation = useStreamingMutation;
 exports.useStreamingQuery = useStreamingQuery;

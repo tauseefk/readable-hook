@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { useIterable } from '../../src/useIterable';
+import { useIterable } from '../../src';
 import { GRID_HEIGHT } from './constants';
 import { getCharactersForever } from './utils';
 

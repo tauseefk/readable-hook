@@ -1,5 +1,5 @@
 import { FC, Fragment } from 'react';
-import { useReadable } from '../../src/useReadable';
+import { useReadable } from '../../src';
 import { GRID_HEIGHT } from './constants';
 
 export const StreamReader: FC<{ readableStream: ReadableStream }> = ({

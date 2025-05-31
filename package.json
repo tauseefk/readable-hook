@@ -1,7 +1,7 @@
 {
   "name": "readable-hook",
   "author": "tauseefk",
-  "version": "7.1.1",
+  "version": "7.1.2",
   "description": "React hooks for synchronizing state with ReadableStreams and AsyncIterables",
   "keywords": [
     "react",
