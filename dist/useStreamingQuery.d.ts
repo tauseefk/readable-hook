@@ -1,8 +1,8 @@
 import { PrimitiveParam } from './constants';
 export declare const useStreamingQuery: (path: string, delay?: number) => [{
-    value: string;
+    value: string | null;
     isStreaming: boolean;
 }, (options?: {
-    params?: Record<string, PrimitiveParam> | undefined;
-    onDone?: ((value?: string) => void) | undefined;
-} | undefined) => Promise<void>];
+    params?: Record<string, PrimitiveParam>;
+    onDone?: (value?: string) => void;
+}) => Promise<void>];

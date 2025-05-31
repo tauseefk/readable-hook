@@ -22,7 +22,7 @@ export const App = () => {
             }
             defaultChecked={showAsyncIterableReader}
           />
-          <span className="px-2">Use Async Iterable</span>
+          <span className="px-2">Async Iterable</span>
         </label>
       </div>
 

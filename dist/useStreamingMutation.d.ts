@@ -3,9 +3,9 @@ export declare const useStreamingMutation: (path: string, staticParams?: Record<
     accumulate?: boolean;
     delay?: number;
 }) => [{
-    value: string;
+    value: string | null;
     isStreaming: boolean;
 }, (options?: {
-    params?: Record<string, PrimitiveParam> | undefined;
-    onDone?: ((value?: string) => void) | undefined;
-} | undefined) => Promise<void>];
+    params?: Record<string, PrimitiveParam>;
+    onDone?: (value?: string) => void;
+}) => Promise<void>];
