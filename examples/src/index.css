@@ -42,7 +42,7 @@ p {
 }
 
 button {
-  border: 1px solid #DA5E46;
+  border: 1px solid #da5e46;
   position: relative;
   padding: 0.6em 1.2em;
   font-size: 1em;
@@ -63,7 +63,7 @@ button:focus-visible {
 }
 
 .ghost-rect::before {
-  border: 1px solid #DA5E46;
+  border: 1px solid #da5e46;
   content: "";
   position: absolute;
   top: 2px;
@@ -83,8 +83,8 @@ button:focus-visible {
   }
 
   button {
-    border: 1px solid #4373B6;
-    color: #4373B6;
+    border: 1px solid #4373b6;
+    color: #4373b6;
   }
 
   button:hover {
@@ -93,7 +93,7 @@ button:focus-visible {
   }
 
   .ghost-rect::before {
-    border: 1px solid #4373B6;
+    border: 1px solid #4373b6;
   }
 
   .ghost-rect:hover:before {
@@ -123,7 +123,7 @@ button:focus-visible {
 ::-webkit-scrollbar-thumb {
   visibility: hidden;
   --tw-border-opacity: 1;
-  background-color: rgba(217, 217, 227, .8);
+  background-color: rgba(217, 217, 227, 0.8);
   border-color: rgba(255, 255, 255, var(--tw-border-opacity));
   border-radius: 9999px;
   border-width: 1px;
@@ -132,7 +132,7 @@ button:focus-visible {
 ::scrollbar-thumb {
   visibility: hidden;
   --tw-border-opacity: 1;
-  background-color: rgba(217, 217, 227, .8);
+  background-color: rgba(217, 217, 227, 0.8);
   border-color: rgba(255, 255, 255, var(--tw-border-opacity));
   border-radius: 9999px;
   border-width: 1px;

@@ -1,12 +1,12 @@
-import { PrimitiveParam } from './constants';
-import { useReadable } from './useReadable';
-import { readableTextStream } from './utils/readableTextStream';
+import { PrimitiveParam } from "./constants";
+import { useReadable } from "./useReadable";
+import { readableTextStream } from "./utils/readableTextStream";
 
 export const useStreamingQuery = (
   path: string,
   delay = 500,
 ): [
-  { value: string; isStreaming: boolean },
+  { value: string | null; isStreaming: boolean },
   (options?: {
     params?: Record<string, PrimitiveParam>;
     onDone?: (value?: string) => void;
@@ -15,7 +15,7 @@ export const useStreamingQuery = (
   useReadable(
     () =>
       readableTextStream(path, {
-        method: 'GET',
+        method: "GET",
       }),
     { delay },
   );

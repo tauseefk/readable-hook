@@ -1,7 +1,8 @@
-import { useRef } from "react";
-import { StreamReader } from "./StreamReader";
-import { StreamWriter } from "./StreamWriter";
-import "./App.css";
+import { useRef } from 'react';
+import { StreamReader } from './StreamReader';
+import { StreamWriter } from './StreamWriter';
+import './App.css';
+import { AsyncIterableReader } from './AsyncIterable';
 
 const encoder = new TextEncoder();
 
@@ -17,6 +18,7 @@ export const App = () => {
   return (
     <div className="wrapper">
       <div className="container grid align-center justify-center grid-gap-2">
+        <AsyncIterableReader />
         <StreamReader
           readableStream={transformStream.current.readable.pipeThrough(
             new TextDecoderStream(),

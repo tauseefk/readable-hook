@@ -1,6 +1,6 @@
-import { PrimitiveParam } from './constants';
-import { readableTextStream } from './utils/readableTextStream';
-import { useReadable } from './useReadable';
+import { PrimitiveParam } from "./constants";
+import { readableTextStream } from "./utils/readableTextStream";
+import { useReadable } from "./useReadable";
 
 export const useStreamingMutation = (
   path: string,
@@ -10,7 +10,7 @@ export const useStreamingMutation = (
     delay?: number;
   },
 ): [
-  { value: string; isStreaming: boolean },
+  { value: string | null; isStreaming: boolean },
   (options?: {
     params?: Record<string, PrimitiveParam>;
     onDone?: (value?: string) => void;
@@ -19,9 +19,9 @@ export const useStreamingMutation = (
   useReadable(
     (params?: Record<string, PrimitiveParam>) =>
       readableTextStream(path, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...staticParams,

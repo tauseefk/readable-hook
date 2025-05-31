@@ -122,7 +122,7 @@
 .dot {
   display: inline-block;
   width: 16px;
-  height: 16px
+  height: 16px;
 }
 
 .w-full {
@@ -132,7 +132,6 @@
 .h-full {
   height: 100%;
 }
-
 
 @media (max-width: 400px) {
   .full {
@@ -155,42 +154,41 @@
   grid-template-columns: repeat(18, minmax(0, 1fr));
 }
 
-
 .color-1 {
   background: #802392;
 }
 
 .color-2 {
-  background: #995FA3;
+  background: #995fa3;
 }
 
 .color-3 {
-  background: #9A98B5;
+  background: #9a98b5;
 }
 
 .color-4 {
-  background: #A0B9C6;
+  background: #a0b9c6;
 }
 
 .color-5 {
-  background: #A5F8D3;
+  background: #a5f8d3;
 }
 
 @media (prefers-color-scheme: light) {
   .color-1 {
-    background: #DA5E46;
+    background: #da5e46;
   }
 
   .color-2 {
-    background: #FA9478;
+    background: #fa9478;
   }
 
   .color-3 {
-    background: #FEDEB8;
+    background: #fedeb8;
   }
 
   .color-4 {
-    background: #4373B6;
+    background: #4373b6;
   }
 
   .color-5 {

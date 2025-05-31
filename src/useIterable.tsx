@@ -1,26 +1,23 @@
-import { useCallback, useState, useRef } from 'react';
-import { useThrottledCallback } from './utils/useThrottledCallback';
+import { useCallback, useState, useRef } from "react";
+import { useThrottledCallback } from "./utils/useThrottledCallback";
 import {
   DEFAULT_STREAM_DATA,
   PrimitiveParam,
   UseReadableHookData,
-} from './constants';
+} from "./constants";
 
 /**
  * Synchronize React state with a ReadableStream.
- * @param {ReadableStream<T>} streamProducer
- *  readable stream to synchronize with state
- * @param {number} delay
- *  time interval between each stream read call
+ * @param {ReadableStream<T>} asyncGenerator readable stream to synchronize with state
+ * @param {number} delay  time interval between each stream read call
  * @returns a tuple of data retrieved from the stream
- *  and a mutation trigger function
+and a mutation trigger function
  */
-
 // biome-ignore lint/complexity/noUselessTypeConstraint: typescript compiler won't have me
-export const useReadable = <T extends unknown>(
-  streamProducer: (
+export const useIterable = <T extends unknown>(
+  asyncGenerator: (
     params?: Record<string, PrimitiveParam>,
-  ) => Promise<ReadableStream<T>>,
+  ) => Promise<AsyncGenerator<T>>,
   {
     delay,
     accumulate,
@@ -64,17 +61,8 @@ export const useReadable = <T extends unknown>(
       // flush state
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
-      const response = await streamProducer(options?.params);
-      if (!response) throw new Error('No response from stream.');
-
-      const reader = response.getReader();
-
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const { value, done } = await reader.read();
-
-        if (done) break;
-
+      const response = await asyncGenerator(options?.params);
+      for await (const value of response) {
         frequentlyUpdatedData.current = {
           isStreaming: true,
           value:
@@ -82,7 +70,6 @@ export const useReadable = <T extends unknown>(
               ? accumulator(frequentlyUpdatedData.current.value, value)
               : value,
         };
-
         throttledUpdateState();
       }
 
@@ -94,7 +81,7 @@ export const useReadable = <T extends unknown>(
       throttledUpdateState();
       options?.onDone?.();
     },
-    [accumulate, accumulator, streamProducer, throttledUpdateState],
+    [accumulate, accumulator, asyncGenerator, throttledUpdateState],
   );
 
   return [{ value, isStreaming }, synchronize];

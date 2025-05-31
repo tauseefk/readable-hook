@@ -1,23 +1,25 @@
-import { FC, Fragment } from 'react';
-import { useReadable } from '../../src/useReadable';
+import { Fragment } from 'react';
+import { useIterable } from '../../src/useIterable';
 import { GRID_HEIGHT } from './constants';
+import { getCharactersForever } from './utils';
 
-export const StreamReader: FC<{ readableStream: ReadableStream<string> }> = ({
-  readableStream,
-}) => {
-  const [{ value }, synchronize] = useReadable(async () => readableStream, {
-    accumulate: true,
-    accumulator: (acc, curr) =>
-      acc
-        ? acc
-            ?.split('\n')
-            .slice(-1 * GRID_HEIGHT)
-            .join('\n')
-            .concat(curr)
-            .concat('\n')
-        : curr.concat('\n'),
-    delay: 100,
-  });
+export const AsyncIterableReader = () => {
+  const [{ value }, synchronize] = useIterable<string>(
+    async () => getCharactersForever(),
+    {
+      accumulate: true,
+      accumulator: (acc, curr) =>
+        acc
+          ? acc
+              .split('\n')
+              .slice(-1 * GRID_HEIGHT)
+              .join('\n')
+              .concat(curr)
+              .concat('\n')
+          : curr.concat('\n'),
+      delay: 100,
+    },
+  );
 
   const lines = value?.split('\n') || [];
   const renderableLines = lines.map((line, lineIdx) => {

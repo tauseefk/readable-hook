@@ -1,28 +1,5 @@
 import { FC, memo, useRef, useState } from 'react';
-import { DEFAULT_COLORS, GRID_HEIGHT, GRID_WIDTH } from './constants';
-
-const flipCoin = () => Math.random() < 0.5;
-const flipResult = flipCoin();
-
-const getRandomUInt = () => {
-  return Math.floor(Math.random() * DEFAULT_COLORS.length);
-};
-
-const BLOCK_NUMBERS = Array(GRID_WIDTH * GRID_HEIGHT)
-  .fill(null)
-  .map((_, idx) =>
-    flipResult ? idx % DEFAULT_COLORS.length : getRandomUInt(),
-  );
-
-const getCharacters = (idx: number) => {
-  const idxAdj = idx * GRID_WIDTH;
-  const idxStart = idxAdj % BLOCK_NUMBERS.length;
-  const idxEnd = (idxAdj + GRID_WIDTH) % BLOCK_NUMBERS.length;
-
-  return idxEnd < idxStart
-    ? [...BLOCK_NUMBERS.slice(idxStart), ...BLOCK_NUMBERS.slice(0, idxEnd)]
-    : BLOCK_NUMBERS.slice(idxStart, idxEnd);
-};
+import { getCharacters } from './utils';
 
 interface StreamWriterProps {
   writableStream: WritableStream;
