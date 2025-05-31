@@ -189,6 +189,10 @@
 }
 
 @media (prefers-color-scheme: light) {
+  :root {
+    color: #4373b6;
+  }
+
   .color-1 {
     background: #da5e46;
   }

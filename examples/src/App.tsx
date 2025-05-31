@@ -13,8 +13,8 @@ export const App = () => {
 
   return (
     <div className="wrapper">
-      <div className="flex container align-center justify-center m-auto-0">
-        <label>
+      <div className="flex container align-center justify-center m-auto-0 pointer">
+        <label className="pointer">
           <input
             type="checkbox"
             onChange={() =>
@@ -22,9 +22,7 @@ export const App = () => {
             }
             defaultChecked={showAsyncIterableReader}
           />
-          <span className="px-2">
-            {showAsyncIterableReader ? 'Async Iterable' : 'ReadableStream'}
-          </span>
+          <span className="px-2">Use Async Iterable</span>
         </label>
       </div>
 
