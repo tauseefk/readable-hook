@@ -48,11 +48,7 @@ const StreamReaderWriterExample = () => {
 
   return (
     <>
-      <StreamReader
-        readableStream={transformStream.current.readable.pipeThrough(
-          new TextDecoderStream(),
-        )}
-      />
+      <StreamReader readableStream={transformStream.current.readable} />
       <StreamWriter writableStream={transformStream.current.writable} />
     </>
   );

@@ -27,26 +27,26 @@ const DEFAULT_STREAM_DATA = {
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 const useThrottledCallback = (cb, deps, ms = 500) => {
-    const timeout = react.useRef();
-    const cachedArgs = react.useRef();
+    const timeout = react.useRef(null);
+    const cachedArgs = react.useRef(null);
     react.useEffect(() => {
         const currentTimeout = timeout.current;
         return () => {
             if (currentTimeout) {
                 clearTimeout(currentTimeout);
-                timeout.current = undefined;
+                timeout.current = null;
             }
         };
     }, []);
     return react.useMemo(() => {
         const execCbAndSchedule = (args) => {
-            cachedArgs.current = undefined;
+            cachedArgs.current = null;
             cb(...args);
             timeout.current = setTimeout(() => {
-                timeout.current = undefined;
+                timeout.current = null;
                 if (cachedArgs.current) {
                     execCbAndSchedule(cachedArgs.current);
-                    cachedArgs.current = undefined;
+                    cachedArgs.current = null;
                 }
             }, ms);
         };

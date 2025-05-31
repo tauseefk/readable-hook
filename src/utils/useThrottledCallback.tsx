@@ -37,31 +37,31 @@ export const useThrottledCallback = <Fn extends (...args: unknown[]) => void>(
   deps: DependencyList,
   ms = 500,
 ): ThrottledFunction<Fn> => {
-  const timeout = useRef<ReturnType<typeof setTimeout>>();
-  const cachedArgs = useRef<Parameters<Fn>>();
+  const timeout = useRef<ReturnType<typeof setTimeout>>(null);
+  const cachedArgs = useRef<Parameters<Fn>>(null);
 
   useEffect(() => {
     const currentTimeout = timeout.current;
     return () => {
       if (currentTimeout) {
         clearTimeout(currentTimeout);
-        timeout.current = undefined;
+        timeout.current = null;
       }
     };
   }, []);
 
   return useMemo(() => {
     const execCbAndSchedule = (args: Parameters<Fn>) => {
-      cachedArgs.current = undefined;
+      cachedArgs.current = null;
       cb(...args);
 
       timeout.current = setTimeout(() => {
-        timeout.current = undefined;
+        timeout.current = null;
 
         if (cachedArgs.current) {
           execCbAndSchedule(cachedArgs.current);
 
-          cachedArgs.current = undefined;
+          cachedArgs.current = null;
         }
       }, ms);
     };

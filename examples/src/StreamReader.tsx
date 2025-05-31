@@ -2,22 +2,25 @@ import { FC, Fragment } from 'react';
 import { useReadable } from '../../src/useReadable';
 import { GRID_HEIGHT } from './constants';
 
-export const StreamReader: FC<{ readableStream: ReadableStream<string> }> = ({
+export const StreamReader: FC<{ readableStream: ReadableStream }> = ({
   readableStream,
 }) => {
-  const [{ value }, synchronize] = useReadable(async () => readableStream, {
-    accumulate: true,
-    accumulator: (acc, curr) =>
-      acc
-        ? acc
-            ?.split('\n')
-            .slice(-1 * GRID_HEIGHT)
-            .join('\n')
-            .concat(curr)
-            .concat('\n')
-        : curr.concat('\n'),
-    delay: 100,
-  });
+  const [{ value }, synchronize] = useReadable(
+    async () => readableStream.pipeThrough(new TextDecoderStream()),
+    {
+      accumulate: true,
+      accumulator: (acc, curr) =>
+        acc
+          ? acc
+              ?.split('\n')
+              .slice(-1 * GRID_HEIGHT)
+              .join('\n')
+              .concat(curr)
+              .concat('\n')
+          : curr.concat('\n'),
+      delay: 100,
+    },
+  );
 
   const lines = value?.split('\n') || [];
   const renderableLines = lines.map((line, lineIdx) => {
