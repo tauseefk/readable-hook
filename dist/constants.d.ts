@@ -1,5 +1,5 @@
 export type PrimitiveParam = string | boolean | number;
-export interface UseReadableHookData<T> {
+export interface HookData<T> {
     value: T | null;
     isStreaming: boolean;
 }

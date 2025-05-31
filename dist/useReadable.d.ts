@@ -1,4 +1,4 @@
-import { PrimitiveParam, UseReadableHookData } from './constants';
+import { HookData, PrimitiveParam } from './constants';
 /**
  * Synchronize React state with a ReadableStream.
  * @param {ReadableStream<T>} streamProducer
@@ -12,7 +12,7 @@ export declare const useReadable: <T extends unknown>(streamProducer: (params?: 
     delay?: number;
     accumulate?: boolean;
     accumulator?: (acc: T | null, curr: T) => T;
-}) => [UseReadableHookData<T>, (options?: {
+}) => [HookData<T>, (options?: {
     params?: Record<string, PrimitiveParam>;
     onDone?: () => void;
 }) => Promise<void>];

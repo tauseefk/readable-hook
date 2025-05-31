@@ -1,7 +1,7 @@
-import { PrimitiveParam, UseReadableHookData } from './constants';
+import { HookData, PrimitiveParam } from './constants';
 /**
- * Synchronize React state with a ReadableStream.
- * @param {ReadableStream<T>} asyncGenerator readable stream to synchronize with state
+ * Synchronize React state with an Async Iterable.
+ * @param {AsyncGenerator<T>} asyncGenerator that creates the async iterable to synchronize with state
  * @param {number} delay  time interval between each stream read call
  * @returns a tuple of data retrieved from the stream
 and a mutation trigger function
@@ -10,7 +10,7 @@ export declare const useIterable: <T extends unknown>(asyncGenerator: (params?: 
     delay?: number;
     accumulate?: boolean;
     accumulator?: (acc: T | null, curr: T) => T;
-}) => [UseReadableHookData<T>, (options?: {
+}) => [HookData<T>, (options?: {
     params?: Record<string, PrimitiveParam>;
     onDone?: () => void;
 }) => Promise<void>];
