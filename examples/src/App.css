@@ -151,7 +151,7 @@
   }
 }
 
-.grid-cols-18	{
+.grid-cols-18 {
   grid-template-columns: repeat(18, minmax(0, 1fr));
 }
 

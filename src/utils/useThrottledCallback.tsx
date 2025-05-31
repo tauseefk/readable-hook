@@ -28,11 +28,11 @@
 
 import { DependencyList, useRef, useEffect, useMemo } from 'react';
 
-export interface ThrottledFunction<Fn extends (...args: any[]) => any> {
-  (...args: Parameters<Fn>): void;
-}
+export type ThrottledFunction<Fn extends (...args: unknown[]) => unknown> = (
+  ...args: Parameters<Fn>
+) => void;
 
-export const useThrottledCallback = <Fn extends (...args: any[]) => void>(
+export const useThrottledCallback = <Fn extends (...args: unknown[]) => void>(
   cb: Fn,
   deps: DependencyList,
   ms = 500,

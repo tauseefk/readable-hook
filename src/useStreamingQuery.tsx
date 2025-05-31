@@ -17,5 +17,5 @@ export const useStreamingQuery = (
       readableTextStream(path, {
         method: 'GET',
       }),
-    delay,
+    { delay },
   );
