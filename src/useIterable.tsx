@@ -1,14 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
-import {
-  DEFAULT_STREAM_DATA,
-  PrimitiveParam,
-  UseReadableHookData,
-} from './constants';
+import { DEFAULT_STREAM_DATA, HookData, PrimitiveParam } from './constants';
 import { useThrottledCallback } from './utils/useThrottledCallback';
 
 /**
- * Synchronize React state with a ReadableStream.
- * @param {ReadableStream<T>} asyncGenerator readable stream to synchronize with state
+ * Synchronize React state with an Async Iterable.
+ * @param {AsyncGenerator<T>} asyncGenerator that creates the async iterable to synchronize with state
  * @param {number} delay  time interval between each stream read call
  * @returns a tuple of data retrieved from the stream
 and a mutation trigger function
@@ -31,14 +27,13 @@ export const useIterable = <T extends unknown>(
     accumulate: false,
   },
 ): [
-  UseReadableHookData<T>,
+  HookData<T>,
   (options?: {
     params?: Record<string, PrimitiveParam>;
     onDone?: () => void;
   }) => Promise<void>,
 ] => {
-  const frequentlyUpdatedData =
-    useRef<UseReadableHookData<T>>(DEFAULT_STREAM_DATA);
+  const frequentlyUpdatedData = useRef<HookData<T>>(DEFAULT_STREAM_DATA);
   const [{ value, isStreaming }, setData] = useState(
     frequentlyUpdatedData.current,
   );

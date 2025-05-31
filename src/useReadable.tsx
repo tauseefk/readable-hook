@@ -1,9 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import {
-  DEFAULT_STREAM_DATA,
-  PrimitiveParam,
-  UseReadableHookData,
-} from './constants';
+import { DEFAULT_STREAM_DATA, HookData, PrimitiveParam } from './constants';
 import { useThrottledCallback } from './utils/useThrottledCallback';
 
 /**
@@ -34,14 +30,13 @@ export const useReadable = <T extends unknown>(
     accumulate: false,
   },
 ): [
-  UseReadableHookData<T>,
+  HookData<T>,
   (options?: {
     params?: Record<string, PrimitiveParam>;
     onDone?: () => void;
   }) => Promise<void>,
 ] => {
-  const frequentlyUpdatedData =
-    useRef<UseReadableHookData<T>>(DEFAULT_STREAM_DATA);
+  const frequentlyUpdatedData = useRef<HookData<T>>(DEFAULT_STREAM_DATA);
   const [{ value, isStreaming }, setData] = useState(
     frequentlyUpdatedData.current,
   );
