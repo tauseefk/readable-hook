@@ -2,7 +2,7 @@
   "name": "readable-hook",
   "author": "tauseefk",
   "version": "7.0.0",
-  "description": "React hook for ReadableStream",
+  "description": "React hooks for synchronizing state with ReadableStreams and AsyncIterables",
   "keywords": [
     "react",
     "hook",
