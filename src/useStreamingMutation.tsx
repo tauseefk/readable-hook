@@ -15,9 +15,10 @@ export const useStreamingMutation = (
     params?: Record<string, PrimitiveParam>;
     onDone?: (value?: string) => void;
   }) => Promise<void>,
+  () => void,
 ] =>
   useReadable(
-    (params?: Record<string, PrimitiveParam>) =>
+    (params?: Record<string, PrimitiveParam>, signal?: AbortSignal) =>
       readableTextStream(path, {
         method: 'POST',
         headers: {
@@ -27,6 +28,7 @@ export const useStreamingMutation = (
           ...staticParams,
           ...params,
         }),
+        signal,
       }),
     options,
   );

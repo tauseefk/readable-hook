@@ -11,11 +11,13 @@ export const useStreamingQuery = (
     params?: Record<string, PrimitiveParam>;
     onDone?: (value?: string) => void;
   }) => Promise<void>,
+  () => void,
 ] =>
   useReadable(
-    () =>
+    (_, signal) =>
       readableTextStream(path, {
         method: 'GET',
+        signal,
       }),
     { delay },
   );

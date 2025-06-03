@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DEFAULT_STREAM_DATA, HookData, PrimitiveParam } from './constants';
 import { useThrottledCallback } from './utils/useThrottledCallback';
 
@@ -16,6 +16,7 @@ import { useThrottledCallback } from './utils/useThrottledCallback';
 export const useReadable = <T extends unknown>(
   streamProducer: (
     params?: Record<string, PrimitiveParam>,
+    signal?: AbortSignal,
   ) => Promise<ReadableStream<T>>,
   {
     delay,
@@ -35,8 +36,10 @@ export const useReadable = <T extends unknown>(
     params?: Record<string, PrimitiveParam>;
     onDone?: () => void;
   }) => Promise<void>,
+  () => void,
 ] => {
   const frequentlyUpdatedData = useRef<HookData<T>>(DEFAULT_STREAM_DATA);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [{ value, isStreaming }, setData] = useState(
     frequentlyUpdatedData.current,
   );
@@ -51,46 +54,75 @@ export const useReadable = <T extends unknown>(
     delay,
   );
 
+  const abort = useCallback(() => {
+    abortControllerRef.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    return abort;
+  }, [abort]);
+
   const synchronize = useCallback(
     async (options?: {
       params?: Record<string, PrimitiveParam>;
       onDone?: () => void;
     }) => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+
       // flush state
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
-      const response = await streamProducer(options?.params);
+      const response = await streamProducer(
+        options?.params,
+        abortControllerRef.current.signal,
+      );
       if (!response) throw new Error('No response from stream.');
 
       const reader = response.getReader();
 
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const { value, done } = await reader.read();
+      try {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { value, done } = await reader.read();
 
-        if (done) break;
+          if (done) break;
+
+          frequentlyUpdatedData.current = {
+            isStreaming: true,
+            value:
+              accumulate && accumulator
+                ? accumulator(frequentlyUpdatedData.current.value, value)
+                : value,
+          };
+
+          throttledUpdateState();
+        }
 
         frequentlyUpdatedData.current = {
-          isStreaming: true,
-          value:
-            accumulate && accumulator
-              ? accumulator(frequentlyUpdatedData.current.value, value)
-              : value,
+          ...frequentlyUpdatedData.current,
+          isStreaming: false,
         };
 
         throttledUpdateState();
+        options?.onDone?.();
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          // Stream was aborted, reset state
+          frequentlyUpdatedData.current = {
+            ...frequentlyUpdatedData.current,
+            isStreaming: false,
+          };
+          throttledUpdateState();
+          return;
+        }
+        throw error;
+      } finally {
+        reader.releaseLock();
       }
-
-      frequentlyUpdatedData.current = {
-        ...frequentlyUpdatedData.current,
-        isStreaming: false,
-      };
-
-      throttledUpdateState();
-      options?.onDone?.();
     },
     [accumulate, accumulator, streamProducer, throttledUpdateState],
   );
 
-  return [{ value, isStreaming }, synchronize];
+  return [{ value, isStreaming }, synchronize, abort];
 };
