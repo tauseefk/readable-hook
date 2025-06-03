@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { DEFAULT_STREAM_DATA, HookData, PrimitiveParam } from './constants';
+import { AbortFn, RuntimeOptions, SynchronizeFn } from './types';
 import { useThrottledCallback } from './utils/useThrottledCallback';
 
 /**
@@ -30,14 +32,7 @@ export const useReadable = <T extends unknown>(
     delay: 500,
     accumulate: false,
   },
-): [
-  HookData<T>,
-  (options?: {
-    params?: Record<string, PrimitiveParam>;
-    onDone?: () => void;
-  }) => Promise<void>,
-  () => void,
-] => {
+): [HookData<T>, SynchronizeFn, AbortFn] => {
   const frequentlyUpdatedData = useRef<HookData<T>>(DEFAULT_STREAM_DATA);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [{ value, isStreaming }, setData] = useState(
@@ -63,20 +58,11 @@ export const useReadable = <T extends unknown>(
   }, [abort]);
 
   const synchronize = useCallback(
-    async (options?: {
-      params?: Record<string, PrimitiveParam>;
-      onDone?: () => void;
-    }) => {
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
-
+    async (options?: RuntimeOptions) => {
       // flush state
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
-      const response = await streamProducer(
-        options?.params,
-        abortControllerRef.current.signal,
-      );
+      const response = await streamProducer(options?.params, options?.signal);
       if (!response) throw new Error('No response from stream.');
 
       const reader = response.getReader();

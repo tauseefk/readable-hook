@@ -1,5 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { AbortError } from './AbortError';
 import { DEFAULT_STREAM_DATA, HookData, PrimitiveParam } from './constants';
+import { AbortFn, SynchronizeFn } from './types';
 import { useThrottledCallback } from './utils/useThrottledCallback';
 
 /**
@@ -13,6 +16,7 @@ and a mutation trigger function
 export const useIterable = <T extends unknown>(
   asyncGenerator: (
     params?: Record<string, PrimitiveParam>,
+    signal?: AbortSignal,
   ) => Promise<AsyncIterable<T>>,
   {
     delay,
@@ -26,14 +30,10 @@ export const useIterable = <T extends unknown>(
     delay: 500,
     accumulate: false,
   },
-): [
-  HookData<T>,
-  (options?: {
-    params?: Record<string, PrimitiveParam>;
-    onDone?: () => void;
-  }) => Promise<void>,
-] => {
+): [HookData<T>, SynchronizeFn, AbortFn] => {
   const frequentlyUpdatedData = useRef<HookData<T>>(DEFAULT_STREAM_DATA);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const [{ value, isStreaming }, setData] = useState(
     frequentlyUpdatedData.current,
   );
@@ -48,36 +48,69 @@ export const useIterable = <T extends unknown>(
     delay,
   );
 
+  const abort = useCallback(() => {
+    abortControllerRef.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    return abort;
+  }, [abort]);
+
   const synchronize = useCallback(
     async (options?: {
       params?: Record<string, PrimitiveParam>;
       onDone?: () => void;
+      signal?: AbortSignal;
     }) => {
       // flush state
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
-      const response = await asyncGenerator(options?.params);
-      for await (const value of response) {
+      try {
+        const response = await asyncGenerator(
+          options?.params,
+          options?.signal, // Pass signal
+        );
+
+        for await (const value of response) {
+          // Check for abort before processing each value
+          if (options?.signal?.aborted) {
+            throw new AbortError('Abort signal received.');
+          }
+
+          frequentlyUpdatedData.current = {
+            isStreaming: true,
+            value:
+              accumulate && accumulator
+                ? accumulator(frequentlyUpdatedData.current.value, value)
+                : value,
+          };
+          throttledUpdateState();
+        }
+
         frequentlyUpdatedData.current = {
-          isStreaming: true,
-          value:
-            accumulate && accumulator
-              ? accumulator(frequentlyUpdatedData.current.value, value)
-              : value,
+          ...frequentlyUpdatedData.current,
+          isStreaming: false,
         };
+
         throttledUpdateState();
+        options?.onDone?.();
+      } catch (error) {
+        if (
+          (error instanceof DOMException && error.name === 'AbortError') ||
+          error instanceof AbortError
+        ) {
+          frequentlyUpdatedData.current = {
+            ...frequentlyUpdatedData.current,
+            isStreaming: false,
+          };
+          throttledUpdateState();
+          return;
+        }
+        throw error;
       }
-
-      frequentlyUpdatedData.current = {
-        ...frequentlyUpdatedData.current,
-        isStreaming: false,
-      };
-
-      throttledUpdateState();
-      options?.onDone?.();
     },
     [accumulate, accumulator, asyncGenerator, throttledUpdateState],
   );
 
-  return [{ value, isStreaming }, synchronize];
+  return [{ value, isStreaming }, synchronize, abort];
 };

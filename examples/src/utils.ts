@@ -25,9 +25,13 @@ export const getCharacters = (idx: number) => {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function* getCharactersForever() {
+export async function* getCharactersForever(signal?: AbortSignal) {
   let idx = 0;
+
   while (true) {
+    if (signal?.aborted) {
+      break;
+    }
     await delay(100);
     idx += 1;
     yield getCharacters(idx).toString();

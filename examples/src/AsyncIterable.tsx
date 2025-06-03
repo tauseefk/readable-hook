@@ -5,7 +5,7 @@ import { getCharactersForever } from './utils';
 
 export const AsyncIterableReader = () => {
   const [{ value }, synchronize] = useIterable<string>(
-    async () => getCharactersForever(),
+    async (_, signal) => getCharactersForever(signal),
     {
       accumulate: true,
       accumulator: (acc, curr) =>
@@ -43,7 +43,13 @@ export const AsyncIterableReader = () => {
           <button
             type="button"
             className="m-auto-0 ghost-rect"
-            onClick={() => synchronize()}
+            onClick={() => {
+              const abortController = new AbortController();
+              synchronize({ signal: abortController.signal });
+              setTimeout(() => {
+                abortController.abort();
+              }, 2000);
+            }}
           >
             Synchronize
           </button>
