@@ -1,4 +1,5 @@
 import { HookData, PrimitiveParam } from './constants';
+import { AbortFn, SynchronizeFn } from './types';
 /**
  * Synchronize React state with a ReadableStream.
  * @param {ReadableStream<T>} streamProducer
@@ -8,11 +9,8 @@ import { HookData, PrimitiveParam } from './constants';
  * @returns a tuple of data retrieved from the stream
  *  and a mutation trigger function
  */
-export declare const useReadable: <T extends unknown>(streamProducer: (params?: Record<string, PrimitiveParam>) => Promise<ReadableStream<T>>, { delay, accumulate, accumulator, }?: {
+export declare const useReadable: <T extends unknown>(streamProducer: (params?: Record<string, PrimitiveParam>, signal?: AbortSignal) => Promise<ReadableStream<T>>, { delay, accumulate, accumulator, }?: {
     delay?: number;
     accumulate?: boolean;
     accumulator?: (acc: T | null, curr: T) => T;
-}) => [HookData<T>, (options?: {
-    params?: Record<string, PrimitiveParam>;
-    onDone?: () => void;
-}) => Promise<void>];
+}) => [HookData<T>, SynchronizeFn, AbortFn];

@@ -1,5 +1,8 @@
 var react = require('react');
 
+class AbortError extends Error {
+}
+
 const DEFAULT_STREAM_DATA = {
     value: null,
     isStreaming: false,
@@ -77,33 +80,58 @@ const useIterable = (asyncGenerator, { delay, accumulate, accumulator, } = {
     accumulate: false,
 }) => {
     const frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
+    const abortControllerRef = react.useRef(null);
     const [{ value, isStreaming }, setData] = react.useState(frequentlyUpdatedData.current);
     const throttledUpdateState = useThrottledCallback(() => {
         setData({
             ...frequentlyUpdatedData.current,
         });
     }, [], delay);
+    const abort = react.useCallback(() => {
+        abortControllerRef.current?.abort();
+    }, []);
+    react.useEffect(() => {
+        return abort;
+    }, [abort]);
     const synchronize = react.useCallback(async (options) => {
         // flush state
         frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
-        const response = await asyncGenerator(options?.params);
-        for await (const value of response) {
+        try {
+            const response = await asyncGenerator(options?.params, options?.signal);
+            for await (const value of response) {
+                // Check for abort before processing each value
+                if (options?.signal?.aborted) {
+                    throw new AbortError('Abort signal received.');
+                }
+                frequentlyUpdatedData.current = {
+                    isStreaming: true,
+                    value: accumulate && accumulator
+                        ? accumulator(frequentlyUpdatedData.current.value, value)
+                        : value,
+                };
+                throttledUpdateState();
+            }
             frequentlyUpdatedData.current = {
-                isStreaming: true,
-                value: accumulate && accumulator
-                    ? accumulator(frequentlyUpdatedData.current.value, value)
-                    : value,
+                ...frequentlyUpdatedData.current,
+                isStreaming: false,
             };
             throttledUpdateState();
+            options?.onDone?.();
         }
-        frequentlyUpdatedData.current = {
-            ...frequentlyUpdatedData.current,
-            isStreaming: false,
-        };
-        throttledUpdateState();
-        options?.onDone?.();
+        catch (error) {
+            if ((error instanceof DOMException && error.name === 'AbortError') ||
+                error instanceof AbortError) {
+                frequentlyUpdatedData.current = {
+                    ...frequentlyUpdatedData.current,
+                    isStreaming: false,
+                };
+                throttledUpdateState();
+                return;
+            }
+            throw error;
+        }
     }, [accumulate, accumulator, asyncGenerator, throttledUpdateState]);
-    return [{ value, isStreaming }, synchronize];
+    return [{ value, isStreaming }, synchronize, abort];
 };
 
 /**
@@ -121,40 +149,64 @@ const useReadable = (streamProducer, { delay, accumulate, accumulator, } = {
     accumulate: false,
 }) => {
     const frequentlyUpdatedData = react.useRef(DEFAULT_STREAM_DATA);
+    const abortControllerRef = react.useRef(null);
     const [{ value, isStreaming }, setData] = react.useState(frequentlyUpdatedData.current);
     const throttledUpdateState = useThrottledCallback(() => {
         setData({
             ...frequentlyUpdatedData.current,
         });
     }, [], delay);
+    const abort = react.useCallback(() => {
+        abortControllerRef.current?.abort();
+    }, []);
+    react.useEffect(() => {
+        return abort;
+    }, [abort]);
     const synchronize = react.useCallback(async (options) => {
         // flush state
         frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
-        const response = await streamProducer(options?.params);
+        const response = await streamProducer(options?.params, options?.signal);
         if (!response)
             throw new Error('No response from stream.');
         const reader = response.getReader();
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done)
-                break;
+        try {
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done)
+                    break;
+                frequentlyUpdatedData.current = {
+                    isStreaming: true,
+                    value: accumulate && accumulator
+                        ? accumulator(frequentlyUpdatedData.current.value, value)
+                        : value,
+                };
+                throttledUpdateState();
+            }
             frequentlyUpdatedData.current = {
-                isStreaming: true,
-                value: accumulate && accumulator
-                    ? accumulator(frequentlyUpdatedData.current.value, value)
-                    : value,
+                ...frequentlyUpdatedData.current,
+                isStreaming: false,
             };
             throttledUpdateState();
+            options?.onDone?.();
         }
-        frequentlyUpdatedData.current = {
-            ...frequentlyUpdatedData.current,
-            isStreaming: false,
-        };
-        throttledUpdateState();
-        options?.onDone?.();
+        catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') {
+                // Stream was aborted, reset state
+                frequentlyUpdatedData.current = {
+                    ...frequentlyUpdatedData.current,
+                    isStreaming: false,
+                };
+                throttledUpdateState();
+                return;
+            }
+            throw error;
+        }
+        finally {
+            reader.releaseLock();
+        }
     }, [accumulate, accumulator, streamProducer, throttledUpdateState]);
-    return [{ value, isStreaming }, synchronize];
+    return [{ value, isStreaming }, synchronize, abort];
 };
 
 const readableTextStream = async (path, options) => {
@@ -164,11 +216,12 @@ const readableTextStream = async (path, options) => {
     return response.body.pipeThrough(new TextDecoderStream());
 };
 
-const useStreamingQuery = (path, delay = 500) => useReadable(() => readableTextStream(path, {
+const useStreamingQuery = (path, delay = 500) => useReadable((_, signal) => readableTextStream(path, {
     method: 'GET',
+    signal,
 }), { delay });
 
-const useStreamingMutation = (path, staticParams, options) => useReadable((params) => readableTextStream(path, {
+const useStreamingMutation = (path, staticParams, options) => useReadable((params, signal) => readableTextStream(path, {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
@@ -177,6 +230,7 @@ const useStreamingMutation = (path, staticParams, options) => useReadable((param
         ...staticParams,
         ...params,
     }),
+    signal,
 }), options);
 
 exports.useIterable = useIterable;
