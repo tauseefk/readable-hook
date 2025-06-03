@@ -66,13 +66,9 @@ export const useIterable = <T extends unknown>(
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
       try {
-        const response = await asyncGenerator(
-          options?.params,
-          options?.signal, // Pass signal
-        );
+        const response = await asyncGenerator(options?.params, options?.signal);
 
         for await (const value of response) {
-          // Check for abort before processing each value
           if (options?.signal?.aborted) {
             throw new AbortError('Abort signal received.');
           }
