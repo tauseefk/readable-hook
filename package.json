@@ -1,8 +1,8 @@
 {
   "name": "readable-hook",
   "author": "tauseefk",
-  "version": "6.1.0",
-  "description": "React hook for ReadableStream",
+  "version": "7.2.0",
+  "description": "React hooks for synchronizing state with ReadableStreams and AsyncIterables",
   "keywords": [
     "react",
     "hook",
@@ -24,35 +24,30 @@
     "prebuild": "rimraf ./dist",
     "build": "rollup -c",
     "examples": "vite serve ./examples",
-    "build:examples": "tsc --project ./examples/tsconfig.json && vite build ./examples",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "biome check src",
+    "lint:fix": "biome check --write src",
+    "lint:examples:fix": "biome check --write examples/src",
+    "build:examples": "tsc --project ./examples/tsconfig.json && vite build ./examples"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/node": "^20.2.3",
-    "@types/react": "^18.2.6",
-    "@types/react-dom": "^18.2.4",
-    "@typescript-eslint/eslint-plugin": "^5.57.1",
-    "@typescript-eslint/parser": "^5.57.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.0.0",
     "babel-core": "^6.26.3",
     "babel-runtime": "^6.26.0",
-    "eslint": "^8.38.0",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.22.1",
     "rollup-plugin-typescript2": "^0.34.1",
-    "typescript": "^5.0.4",
+    "typescript": "^5.8.3",
     "vite": "^4.3.2"
   },
   "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }

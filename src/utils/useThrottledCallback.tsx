@@ -26,42 +26,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import { DependencyList, useRef, useEffect, useMemo } from 'react';
+import { DependencyList, useEffect, useMemo, useRef } from 'react';
 
-export interface ThrottledFunction<Fn extends (...args: any[]) => any> {
-  (...args: Parameters<Fn>): void;
-}
+export type ThrottledFunction<Fn extends (...args: unknown[]) => unknown> = (
+  ...args: Parameters<Fn>
+) => void;
 
-export const useThrottledCallback = <Fn extends (...args: any[]) => void>(
+export const useThrottledCallback = <Fn extends (...args: unknown[]) => void>(
   cb: Fn,
   deps: DependencyList,
   ms = 500,
 ): ThrottledFunction<Fn> => {
-  const timeout = useRef<ReturnType<typeof setTimeout>>();
-  const cachedArgs = useRef<Parameters<Fn>>();
+  const timeout = useRef<ReturnType<typeof setTimeout>>(null);
+  const cachedArgs = useRef<Parameters<Fn>>(null);
 
   useEffect(() => {
     const currentTimeout = timeout.current;
     return () => {
       if (currentTimeout) {
         clearTimeout(currentTimeout);
-        timeout.current = undefined;
+        timeout.current = null;
       }
     };
   }, []);
 
   return useMemo(() => {
     const execCbAndSchedule = (args: Parameters<Fn>) => {
-      cachedArgs.current = undefined;
+      cachedArgs.current = null;
       cb(...args);
 
       timeout.current = setTimeout(() => {
-        timeout.current = undefined;
+        timeout.current = null;
 
         if (cachedArgs.current) {
           execCbAndSchedule(cachedArgs.current);
 
-          cachedArgs.current = undefined;
+          cachedArgs.current = null;
         }
       }, ms);
     };

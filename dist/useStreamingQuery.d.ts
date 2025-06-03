@@ -1,8 +1,5 @@
-import { PrimitiveParam } from './constants';
+import { AbortFn, SynchronizeFn } from './types';
 export declare const useStreamingQuery: (path: string, delay?: number) => [{
-    value: string;
+    value: string | null;
     isStreaming: boolean;
-}, (options?: {
-    params?: Record<string, PrimitiveParam> | undefined;
-    onDone?: ((value?: string) => void) | undefined;
-} | undefined) => Promise<void>];
+}, SynchronizeFn, AbortFn];

@@ -1,25 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { AbortError } from './AbortError';
 import { DEFAULT_STREAM_DATA, HookData, PrimitiveParam } from './constants';
-import { AbortFn, RuntimeOptions, SynchronizeFn } from './types';
+import { AbortFn, SynchronizeFn } from './types';
 import { useThrottledCallback } from './utils/useThrottledCallback';
 
 /**
- * Synchronize React state with a ReadableStream.
- * @param {ReadableStream<T>} streamProducer
- *  readable stream to synchronize with state
- * @param {number} delay
- *  time interval between each stream read call
+ * Synchronize React state with an Async Iterable.
+ * @param {AsyncIterable<T>} asyncGenerator that returns the async iterable to synchronize with state
+ * @param {number} delay  time interval between each stream read call
  * @returns a tuple of data retrieved from the stream
- *  and a mutation trigger function
+and a mutation trigger function
  */
-
 // biome-ignore lint/complexity/noUselessTypeConstraint: typescript compiler won't have me
-export const useReadable = <T extends unknown>(
-  streamProducer: (
+export const useIterable = <T extends unknown>(
+  asyncGenerator: (
     params?: Record<string, PrimitiveParam>,
     signal?: AbortSignal,
-  ) => Promise<ReadableStream<T>>,
+  ) => Promise<AsyncIterable<T>>,
   {
     delay,
     accumulate,
@@ -35,6 +33,7 @@ export const useReadable = <T extends unknown>(
 ): [HookData<T>, SynchronizeFn, AbortFn] => {
   const frequentlyUpdatedData = useRef<HookData<T>>(DEFAULT_STREAM_DATA);
   const abortControllerRef = useRef<AbortController | null>(null);
+
   const [{ value, isStreaming }, setData] = useState(
     frequentlyUpdatedData.current,
   );
@@ -58,21 +57,25 @@ export const useReadable = <T extends unknown>(
   }, [abort]);
 
   const synchronize = useCallback(
-    async (options?: RuntimeOptions) => {
+    async (options?: {
+      params?: Record<string, PrimitiveParam>;
+      onDone?: () => void;
+      signal?: AbortSignal;
+    }) => {
       // flush state
       frequentlyUpdatedData.current = DEFAULT_STREAM_DATA;
 
-      const response = await streamProducer(options?.params, options?.signal);
-      if (!response) throw new Error('No response from stream.');
-
-      const reader = response.getReader();
-
       try {
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          const { value, done } = await reader.read();
+        const response = await asyncGenerator(
+          options?.params,
+          options?.signal, // Pass signal
+        );
 
-          if (done) break;
+        for await (const value of response) {
+          // Check for abort before processing each value
+          if (options?.signal?.aborted) {
+            throw new AbortError('Abort signal received.');
+          }
 
           frequentlyUpdatedData.current = {
             isStreaming: true,
@@ -81,7 +84,6 @@ export const useReadable = <T extends unknown>(
                 ? accumulator(frequentlyUpdatedData.current.value, value)
                 : value,
           };
-
           throttledUpdateState();
         }
 
@@ -93,8 +95,10 @@ export const useReadable = <T extends unknown>(
         throttledUpdateState();
         options?.onDone?.();
       } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          // Stream was aborted, reset state
+        if (
+          (error instanceof DOMException && error.name === 'AbortError') ||
+          error instanceof AbortError
+        ) {
           frequentlyUpdatedData.current = {
             ...frequentlyUpdatedData.current,
             isStreaming: false,
@@ -103,11 +107,9 @@ export const useReadable = <T extends unknown>(
           return;
         }
         throw error;
-      } finally {
-        reader.releaseLock();
       }
     },
-    [accumulate, accumulator, streamProducer, throttledUpdateState],
+    [accumulate, accumulator, asyncGenerator, throttledUpdateState],
   );
 
   return [{ value, isStreaming }, synchronize, abort];

@@ -5,6 +5,7 @@ export const readableTextStream = async (
     mode?: 'cors' | 'no-cors' | 'same-origin';
     body?: string;
     headers?: Record<string, string>;
+    signal?: AbortSignal;
   },
 ) => {
   const response = await fetch(path, options);

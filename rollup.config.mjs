@@ -1,6 +1,13 @@
+import fs from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import typescript from 'rollup-plugin-typescript2';
 
-import pkg from './package.json' assert { type: 'json' };
+const packagePath = join(
+  dirname(fileURLToPath(import.meta.url)),
+  './package.json',
+);
+const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
 export default {
   input: 'src/index.ts',
@@ -10,11 +17,9 @@ export default {
       format: 'cjs',
       exports: 'named',
       sourcemap: true,
-      strict: false
-    }
+      strict: false,
+    },
   ],
-  plugins: [
-    typescript()
-  ],
-  external: ['react', 'react-dom']
+  plugins: [typescript()],
+  external: ['react', 'react-dom'],
 };

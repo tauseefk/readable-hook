@@ -1,6 +1,7 @@
 import { PrimitiveParam } from './constants';
-import { readableTextStream } from './utils/readableTextStream';
+import { AbortFn, SynchronizeFn } from './types';
 import { useReadable } from './useReadable';
+import { readableTextStream } from './utils/readableTextStream';
 
 export const useStreamingMutation = (
   path: string,
@@ -9,15 +10,9 @@ export const useStreamingMutation = (
     accumulate?: boolean;
     delay?: number;
   },
-): [
-  { value: string; isStreaming: boolean },
-  (options?: {
-    params?: Record<string, PrimitiveParam>;
-    onDone?: (value?: string) => void;
-  }) => Promise<void>,
-] =>
+): [{ value: string | null; isStreaming: boolean }, SynchronizeFn, AbortFn] =>
   useReadable(
-    (params?: Record<string, PrimitiveParam>) =>
+    (params?: Record<string, PrimitiveParam>, signal?: AbortSignal) =>
       readableTextStream(path, {
         method: 'POST',
         headers: {
@@ -27,6 +22,7 @@ export const useStreamingMutation = (
           ...staticParams,
           ...params,
         }),
+        signal,
       }),
     options,
   );

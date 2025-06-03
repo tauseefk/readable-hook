@@ -1,18 +1,17 @@
-import { FC, Fragment } from 'react';
-import { useReadable } from '../../src';
+import { Fragment } from 'react';
+import { useIterable } from '../../src';
 import { GRID_HEIGHT } from './constants';
+import { getCharactersForever } from './utils';
 
-export const StreamReader: FC<{ readableStream: ReadableStream }> = ({
-  readableStream,
-}) => {
-  const [{ value }, synchronize] = useReadable(
-    async () => readableStream.pipeThrough(new TextDecoderStream()),
+export const AsyncIterableReader = () => {
+  const [{ value }, synchronize] = useIterable<string>(
+    async (_, signal) => getCharactersForever(signal),
     {
       accumulate: true,
       accumulator: (acc, curr) =>
         acc
           ? acc
-              ?.split('\n')
+              .split('\n')
               .slice(-1 * GRID_HEIGHT)
               .join('\n')
               .concat(curr)
@@ -44,7 +43,13 @@ export const StreamReader: FC<{ readableStream: ReadableStream }> = ({
           <button
             type="button"
             className="m-auto-0 ghost-rect"
-            onClick={() => synchronize()}
+            onClick={() => {
+              const abortController = new AbortController();
+              synchronize({ signal: abortController.signal });
+              setTimeout(() => {
+                abortController.abort();
+              }, 2000);
+            }}
           >
             Synchronize
           </button>
